@@ -4,6 +4,7 @@ import { Activity, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 
 const navLinks = [
@@ -39,6 +40,7 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeSwitcher />
           <Button variant="ghost" size="sm">
             Sign in
           </Button>
@@ -65,6 +67,9 @@ export function Navbar() {
             className="overflow-hidden border-t border-border/40 bg-background md:hidden"
           >
             <div className="px-4 pb-4 pt-2">
+              <div className="px-2 pb-3">
+                <ThemeSwitcher />
+              </div>
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
