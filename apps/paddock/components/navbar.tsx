@@ -1,6 +1,7 @@
 "use client";
 
 import { Activity, Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -54,28 +55,42 @@ export function Navbar() {
         </button>
       </nav>
 
-      {open && (
-        <div className="border-t border-border/40 bg-background px-4 pb-4 pt-2 md:hidden">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="block px-2 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              onClick={() => setOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <div className="mt-3 flex flex-col gap-2 px-2">
-            <Button variant="ghost" size="sm" className="w-full justify-center">
-              Sign in
-            </Button>
-            <Button size="sm" className="w-full justify-center">
-              Get Started
-            </Button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden border-t border-border/40 bg-background md:hidden"
+          >
+            <div className="px-4 pb-4 pt-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="block px-2 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={() => setOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="mt-3 flex flex-col gap-2 px-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-center"
+                >
+                  Sign in
+                </Button>
+                <Button size="sm" className="w-full justify-center">
+                  Get Started
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

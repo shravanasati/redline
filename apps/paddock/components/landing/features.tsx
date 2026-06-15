@@ -6,36 +6,42 @@ const features = [
     title: "Global Monitoring",
     description:
       "12 pop locations across 5 continents. Every check runs from 3+ nodes simultaneously for zero false positives.",
+    accent: "from-primary/20 to-primary/5",
   },
   {
     icon: Bell,
     title: "Instant Alerts",
     description:
       "Slack, PagerDuty, email, SMS, or webhook — pick your channel. Alerts fire in under 5 seconds of detection.",
+    accent: "from-secondary/20 to-secondary/5",
   },
   {
     icon: BarChart3,
     title: "Real-time Dashboards",
     description:
       "Live latency heatmaps, uptime calendars, and response-time trends. Shareable with your whole team.",
+    accent: "from-accent/20 to-accent/5",
   },
   {
     icon: RefreshCw,
     title: "30-Second Intervals",
     description:
       "Checks run as fast as every 30 seconds from every node. No more waiting 5 minutes to know you're down.",
+    accent: "from-primary/20 to-primary/5",
   },
   {
     icon: Shield,
     title: "Status Pages",
     description:
       "Hosted status pages with custom domains and branding. Keep your users informed without exposing internals.",
+    accent: "from-secondary/20 to-secondary/5",
   },
   {
     icon: Gauge,
     title: "SSL & Domain Tracking",
     description:
       "Monitor certificate expiry, DNS resolution, and response body matching alongside basic uptime checks.",
+    accent: "from-accent/20 to-accent/5",
   },
 ];
 
@@ -62,9 +68,12 @@ export function Features() {
             return (
               <div
                 key={feature.title}
-                className="group rounded-2xl border border-border/50 bg-card p-6 shadow-xs transition-all hover:shadow-md"
+                className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-lg"
               >
-                <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div
+                  className={`absolute inset-x-0 top-0 h-1 bg-linear-to-r ${feature.accent}`}
+                />
+                <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-linear-to-br from-primary/10 to-primary/5 text-primary ring-1 ring-primary/10">
                   <Icon className="size-5" />
                 </div>
                 <h3 className="font-heading font-semibold">{feature.title}</h3>

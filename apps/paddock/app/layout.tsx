@@ -19,7 +19,7 @@ const fontMono = Fira_Code({
 });
 
 export const metadata: Metadata = {
-  title: "redline — Distributed Uptime Monitoring",
+  title: "redline | Distributed Uptime Monitoring",
   description:
     "Monitor your services from nodes across the globe every 30 seconds. Get instant alerts before your users notice.",
 };
