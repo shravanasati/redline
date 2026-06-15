@@ -1,4 +1,5 @@
 import { Activity } from "lucide-react";
+import Link from "next/link";
 
 const footerLinks = [
   {
@@ -21,13 +22,13 @@ export function Footer() {
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <a
+            <Link
               href="/"
               className="flex items-center gap-2 font-heading text-lg font-semibold tracking-tight"
             >
               <Activity className="size-5 text-primary" />
               redline
-            </a>
+            </Link>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               Distributed uptime monitoring built for teams that ship fast and
               sleep well.

@@ -1,3 +1,15 @@
+# Project
+
+This is a **Next.js 16** (App Router) project with **React 19**, **Tailwind CSS v4**, and **shadcn/ui** (radix-rhea style).
+
+## Next.js Conventions
+
+- Use **`next/link`** (`Link`) for all internal navigation — never `<a>` tags for internal routes.
+- Use **`next/image`** (`Image`) for all images — never `<img>` tags.
+- Components that use React hooks (e.g. `useState`, `useEffect`) must have `"use client"` at the top. Everything else stays a Server Component.
+- Fetch data directly in Server Components (no API layer needed). Use Server Actions for mutations.
+- Refer to `.agents/skills/next-best-practices/` for detailed guidance on RSC boundaries, data patterns, metadata, etc.
+
 # Design
 
 ## Styling Philosophy
