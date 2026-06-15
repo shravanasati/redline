@@ -41,9 +41,11 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeSwitcher />
-          <Button variant="ghost" size="sm">
-            Sign in
-          </Button>
+          <Link href="/login">
+            <Button variant="ghost" size="sm">
+              Sign in
+            </Button>
+          </Link>
           <Button size="sm">Get Started</Button>
         </div>
 
@@ -81,13 +83,15 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="mt-3 flex flex-col gap-2 px-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-center"
-                >
-                  Sign in
-                </Button>
+                <Link href="/login" onClick={() => setOpen(false)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-center"
+                  >
+                    Sign in
+                  </Button>
+                </Link>
                 <Button size="sm" className="w-full justify-center">
                   Get Started
                 </Button>

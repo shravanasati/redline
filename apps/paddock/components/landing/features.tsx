@@ -1,5 +1,12 @@
 import { BarChart3, Bell, Gauge, Globe, RefreshCw, Shield } from "lucide-react";
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardTitle,
+} from "@/components/ui/card";
+
 const features = [
   {
     icon: Globe,
@@ -66,21 +73,25 @@ export function Features() {
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
-              <div
+              <Card
                 key={feature.title}
-                className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card p-6 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                className="group relative border border-border/50 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <div
                   className={`absolute inset-x-0 top-0 h-1 bg-linear-to-r ${feature.accent}`}
                 />
-                <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-linear-to-br from-primary/10 to-primary/5 text-primary ring-1 ring-primary/10">
-                  <Icon className="size-5" />
-                </div>
-                <h3 className="font-heading font-semibold">{feature.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {feature.description}
-                </p>
-              </div>
+                <CardContent className="flex flex-col gap-3">
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-linear-to-br from-primary/10 to-primary/5 text-primary ring-1 ring-primary/10">
+                    <Icon className="size-5" />
+                  </div>
+                  <CardTitle className="font-semibold">
+                    {feature.title}
+                  </CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    {feature.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
