@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Fira_Code, Lora, Poppins } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const fontSans = Poppins({
   subsets: ["latin"],

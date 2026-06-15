@@ -1,6 +1,6 @@
 import { Activity, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function CTA() {
   return (

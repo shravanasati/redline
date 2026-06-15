@@ -1,6 +1,6 @@
 import { ArrowRight, Check, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const monitors = [
   { name: "api.redline.io", status: "up", latency: "42ms", checked: "2s ago" },
@@ -79,10 +79,10 @@ export function Hero() {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/dashboard">
-            <Button size="lg" className="gap-2 text-base shadow-xs">
-              Start Monitoring
-              <ArrowRight className="size-4" />
-            </Button>
+              <Button size="lg" className="gap-2 text-base shadow-xs">
+                Start Monitoring
+                <ArrowRight className="size-4" />
+              </Button>
             </Link>
             <Button variant="outline" size="lg" className="text-base shadow-xs">
               View Live Demo

@@ -41,11 +41,6 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeSwitcher />
-          <Link href="/login">
-            <Button variant="ghost" size="sm">
-              Sign in
-            </Button>
-          </Link>
           <Link href="/dashboard">
             <Button size="sm">Get Started</Button>
           </Link>
