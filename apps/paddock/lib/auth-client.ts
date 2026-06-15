@@ -6,7 +6,7 @@ export type SocialProvider = "github"; //| "google"
 
 export const signIn = async (
   provider: SocialProvider,
-  callbackURL: string = "/app",
+  callbackURL: string = "/dashboard",
 ) => {
   const data = await authClient.signIn.social({
     provider: provider,

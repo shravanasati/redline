@@ -1,5 +1,6 @@
 import { Activity, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export function CTA() {
   return (
@@ -26,10 +27,12 @@ export function CTA() {
                 10,000 checks per month.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Button size="lg" className="gap-2 text-base shadow-xs">
-                  Get Started Free
-                  <ArrowRight className="size-4" />
-                </Button>
+                <Link href="/dashboard">
+                  <Button size="lg" className="gap-2 text-base shadow-xs">
+                    Get Started Free
+                    <ArrowRight className="size-4" />
+                  </Button>
+                </Link>
                 {/* <Button
                   variant="outline"
                   size="lg"

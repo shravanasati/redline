@@ -1,14 +1,10 @@
 export function sanitizeNextURL(url: string) {
   const lowerURL = url.toLowerCase();
   const knownPaths = [
-    "/app",
-    // "/app/entries",
-    // "/app/insights",
-    // "/app/chat",
-    // "/profile",
+    "/dashboard",
   ];
   if (knownPaths.includes(lowerURL)) {
     return lowerURL;
   }
-  return "/app";
+  return "/dashboard";
 }

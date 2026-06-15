@@ -46,7 +46,9 @@ export function Navbar() {
               Sign in
             </Button>
           </Link>
-          <Button size="sm">Get Started</Button>
+          <Link href="/dashboard">
+            <Button size="sm">Get Started</Button>
+          </Link>
         </div>
 
         <button
