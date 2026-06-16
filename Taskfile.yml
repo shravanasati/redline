@@ -8,3 +8,26 @@ tasks:
     cmds:
       - pnpm run dev
 
+  up:
+    cmds:
+      - docker compose up -d
+
+  down:
+    cmds:
+      - docker compose down
+
+
+  db:
+    cmds:
+      - docker compose up postgres -d
+
+  psql:
+    cmds:
+      - docker compose exec postgres psql -U postgres -d redline
+
+  migrate:
+    dir: apps/paddock
+    cmds:
+      - pnpm dlx auth@latest generate
+      - pnpm drizzle-kit generate
+      - pnpm drizzle-kit migrate

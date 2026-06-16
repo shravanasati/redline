@@ -1,5 +1,6 @@
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
+import { lastLoginMethod } from "better-auth/plugins"
 import { nextCookies } from "better-auth/next-js";
 import { db, schema } from "@/lib/db";
 import { cache } from "react";
@@ -20,7 +21,7 @@ export const auth = betterAuth({
       clientSecret: env.GITHUB_CLIENT_SECRET,
     },
   },
-  plugins: [nextCookies()],
+  plugins: [nextCookies(), lastLoginMethod()],
   advanced: {
     cookiePrefix: "redline",
   },

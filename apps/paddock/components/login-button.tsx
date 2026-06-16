@@ -1,7 +1,8 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { signIn } from "@/lib/auth-client";
+import { authClient, signIn } from "@/lib/auth-client";
 
 function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -19,10 +20,17 @@ function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export function LoginButton() {
+  const lastMethod = authClient.getLastUsedLoginMethod();
+  console.log(lastMethod)
   return (
     <Button size="lg" className="w-full" onClick={() => signIn("github")}>
       <GithubIcon className="size-5" />
       Login with GitHub
+      {lastMethod === "github" && (
+        <Badge variant="secondary" className="ml-2">
+          Last used
+        </Badge>
+      )}
     </Button>
   );
 }
