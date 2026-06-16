@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
+import Link from "next/link";
 
 export function NavUser({
   user,
@@ -64,8 +65,8 @@ export function NavUser({
       typeof user.error === "string"
         ? user.error
         : user.error &&
-            typeof user.error === "object" &&
-            "message" in user.error
+          typeof user.error === "object" &&
+          "message" in user.error
           ? String(user.error.message)
           : "Please sign in again";
 
@@ -155,16 +156,16 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <CircleUserRoundIcon />
-                Account
+                <Link href="/dashboard/profile" className="flex items-center gap-2">
+                  <CircleUserRoundIcon />
+                  Profile
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CreditCardIcon />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
-                Notifications
+                <Link href="/dashboard/notifications" className="flex items-center gap-2">
+                  <BellIcon />
+                  Notifications
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

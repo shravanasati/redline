@@ -21,8 +21,18 @@ const createMonitorSchema = z.object({
 	name: z.string().min(1).max(255),
 	type: z.enum(monitorTypeValues),
 	endpoint: z.url(),
-	frequency: z.number().int().min(10).max(3600),
-	timeout: z.number().int().positive().optional(),
+	frequency: z.union([
+		z.literal(30),
+		z.literal(60),
+		z.literal(120),
+		z.literal(180),
+		z.literal(300),
+		z.literal(600),
+		z.literal(900),
+		z.literal(1800),
+		z.literal(3600),
+	]),
+	timeout: z.number().int().min(1).max(60).optional(),
 	status: z.enum(monitorStatusValues).optional(),
 	assertions: z
 		.array(
