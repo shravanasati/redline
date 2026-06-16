@@ -5,7 +5,7 @@ export const authClient = createAuthClient({
   plugins: [lastLoginMethodClient()]
 });
 
-export type SocialProvider = "github"; //| "google"
+export type SocialProvider = "github" | "google";
 
 export const signIn = async (
   provider: SocialProvider,

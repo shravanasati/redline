@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
+import { usePathname } from "next/navigation";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -15,9 +16,11 @@ const navLinks = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const currentPath = usePathname()
+  if (currentPath.includes("/dashboard")) return null
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md mb-16">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"

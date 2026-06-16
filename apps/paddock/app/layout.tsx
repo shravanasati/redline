@@ -3,6 +3,7 @@ import { Fira_Code, Lora, Poppins } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 const fontSans = Poppins({
   subsets: ["latin"],
@@ -37,8 +38,10 @@ export default function RootLayout({
         className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="light">
-          <Navbar />
-          <main className="pt-16">{children}</main>
+          <TooltipProvider>
+            <Navbar />
+            <main>{children}</main>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

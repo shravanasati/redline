@@ -23,8 +23,9 @@ export default async function LoginPage() {
           <CardTitle className="text-2xl">Welcome back</CardTitle>
           <CardDescription>Sign in to your account to continue</CardDescription>
         </CardHeader>
-        <CardContent>
-          <LoginButton />
+        <CardContent className="flex flex-col gap-3">
+          <LoginButton provider="github" />
+          <LoginButton provider="google" />
         </CardContent>
       </Card>
     </div>
