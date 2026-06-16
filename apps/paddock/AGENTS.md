@@ -58,4 +58,4 @@ Project aliases (from `tsconfig.json` paths and `components.json`):
 - I strictly use **pnpm**. Never use npm, yarn, or any other package manager.
 - Install dependencies with `pnpm add <pkg>`.
 - Dev dependencies with `pnpm add -D <pkg>`.
-- Run scripts with `pnpm run <script>` (e.g. `pnpm dev`, `pnpm build`, `pnpm lint`).
+- Run scripts with `pnpm run <script>` (e.g. `pnpm run dev`, `pnpm run build`, `pnpm run lint`).

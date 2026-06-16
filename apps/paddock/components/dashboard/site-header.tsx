@@ -8,6 +8,7 @@ export function SiteHeader() {
   const siteHeaderTitles: Record<string, string> = {
     "/dashboard": "Dashboard",
     "/dashboard/monitors": "Monitors",
+    "/dashboard/profile": "Profile",
   }
   const pathname = usePathname()
   const title = siteHeaderTitles[pathname] || "Dashboard"

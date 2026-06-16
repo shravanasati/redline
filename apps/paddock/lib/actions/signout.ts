@@ -20,7 +20,7 @@ export async function revokeSessionAction(sessionToken: string) {
       body: { token: sessionToken },
       headers: await headers(),
     });
-    revalidatePath("/profile");
+    revalidatePath("/dashboard/profile");
     return { success: true };
   } catch (e) {
     console.error("Revoke session failed:", e);
@@ -31,7 +31,7 @@ export async function revokeSessionAction(sessionToken: string) {
 export async function revokeOtherSessionsAction() {
   try {
     await auth.api.revokeOtherSessions({ headers: await headers() });
-    revalidatePath("/profile");
+    revalidatePath("/dashboard/profile");
     return { success: true };
   } catch (e) {
     console.error("Revoke all sessions failed:", e);
