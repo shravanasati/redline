@@ -54,7 +54,7 @@ export type MonitorAssertions = MonitorAssertion[];
 
 export type MonitorMetadata = {
   headers?: Record<string, string>;
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: "GET" | "POST" | "HEAD";
   body?: string;
 };
 

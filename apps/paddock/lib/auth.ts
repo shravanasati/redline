@@ -21,7 +21,7 @@ export const auth = betterAuth({
       clientSecret: env.GITHUB_CLIENT_SECRET,
     },
   },
-  plugins: [nextCookies(), lastLoginMethod()],
+  plugins: [lastLoginMethod(), nextCookies()],
   advanced: {
     cookiePrefix: "redline",
   },

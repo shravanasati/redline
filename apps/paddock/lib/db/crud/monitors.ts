@@ -89,3 +89,19 @@ export async function deleteMonitor(id: string): Promise<Monitor | undefined> {
 
   return monitor;
 }
+
+export async function pauseMonitor(
+  id: string,
+  isPaused: boolean,
+): Promise<Monitor | undefined> {
+  const [monitor] = await db
+    .update(monitors)
+    .set({
+      status: isPaused ? "paused" : "active",
+    })
+    .where(eq(monitors.id, id))
+    .returning();
+
+  return monitor;
+}
+

@@ -18,7 +18,14 @@ import {
   WifiIcon,
   NetworkIcon,
   AlertCircleIcon,
+  PlayIcon,
+  PauseIcon,
+  LoaderIcon,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toggleMonitorPauseAction } from "@/lib/actions/monitors";
+import { useTransition } from "react";
+
 
 type Monitor = {
   id: string;
@@ -90,6 +97,48 @@ function formatFrequency(seconds: number): string {
   return `${Math.round(seconds / 3600)}h`;
 }
 
+function TogglePauseButton({
+  monitorId,
+  status,
+}: {
+  monitorId: string;
+  status: "active" | "paused" | "draft";
+}) {
+  const [isPending, startTransition] = useTransition();
+
+  const handleToggle = () => {
+    startTransition(async () => {
+      await toggleMonitorPauseAction(monitorId);
+    });
+  };
+
+  const isPaused = status === "paused";
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      title={isPaused ? "Resume monitor" : "Pause monitor"}
+      onClick={handleToggle}
+      disabled={isPending}
+      className={
+        isPaused
+          ? "hover:bg-emerald-500/10 hover:text-emerald-500"
+          : "hover:bg-amber-500/10 hover:text-amber-500"
+      }
+    >
+      {isPending ? (
+        <LoaderIcon className="size-4 animate-spin" />
+      ) : isPaused ? (
+        <PlayIcon className="size-4" />
+      ) : (
+        <PauseIcon className="size-4" />
+      )}
+      <span className="sr-only">{isPaused ? "Resume" : "Pause"}</span>
+    </Button>
+  );
+}
+
 export function MonitorsTable({ monitors }: { monitors: Monitor[] }) {
   if (monitors.length === 0) {
     return (
@@ -149,6 +198,7 @@ export function MonitorsTable({ monitors }: { monitors: Monitor[] }) {
             </TableCell>
             <TableCell className="text-right">
               <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <TogglePauseButton monitorId={monitor.id} status={monitor.status} />
                 <MonitorFormModal mode="edit" monitor={monitor} />
                 <DeleteMonitorButton
                   monitorId={monitor.id}

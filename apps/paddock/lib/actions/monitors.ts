@@ -11,6 +11,7 @@ import {
 	getMonitorById,
 	getMonitorsByUserId,
 	updateMonitor,
+	pauseMonitor,
 } from "@/lib/db/crud/monitors";
 import { monitorStatusEnum, monitorTypeEnum } from "@/lib/db/schema/monitors";
 
@@ -33,7 +34,6 @@ const createMonitorSchema = z.object({
 		z.literal(3600),
 	]),
 	timeout: z.number().int().min(1).max(60).optional(),
-	status: z.enum(monitorStatusValues).optional(),
 	assertions: z
 		.array(
 			z.object({
@@ -46,7 +46,7 @@ const createMonitorSchema = z.object({
 	metadata: z
 		.object({
 			headers: z.record(z.string(), z.string()).optional(),
-			method: z.enum(["GET", "POST", "PUT", "DELETE"]).optional(),
+			method: z.enum(["GET", "POST", "HEAD"]).optional(),
 			body: z.string().optional(),
 		})
 		.optional(),
@@ -65,10 +65,27 @@ export async function createMonitorAction(
 		}
 
 		const raw = Object.fromEntries(formData);
+
+		let assertionsJson: unknown = undefined;
+		if (raw.assertions) {
+			try {
+				assertionsJson = JSON.parse(raw.assertions as string);
+			} catch {}
+		}
+
+		let metadataJson: unknown = undefined;
+		if (raw.metadata) {
+			try {
+				metadataJson = JSON.parse(raw.metadata as string);
+			} catch {}
+		}
+
 		const parsed = createMonitorSchema.safeParse({
 			...raw,
 			frequency: raw.frequency ? Number(raw.frequency) : undefined,
 			timeout: raw.timeout ? Number(raw.timeout) : undefined,
+			assertions: assertionsJson,
+			metadata: metadataJson,
 		});
 
 		if (!parsed.success) {
@@ -77,6 +94,7 @@ export async function createMonitorAction(
 
 		const input: CreateMonitorInput = {
 			userId: session.user.id,
+			status: "active",
 			...parsed.data,
 		};
 
@@ -111,10 +129,27 @@ export async function updateMonitorAction(
 		}
 
 		const raw = Object.fromEntries(formData);
+
+		let assertionsJson: unknown = undefined;
+		if (raw.assertions) {
+			try {
+				assertionsJson = JSON.parse(raw.assertions as string);
+			} catch {}
+		}
+
+		let metadataJson: unknown = undefined;
+		if (raw.metadata) {
+			try {
+				metadataJson = JSON.parse(raw.metadata as string);
+			} catch {}
+		}
+
 		const parsed = updateMonitorSchema.safeParse({
 			...raw,
 			frequency: raw.frequency ? Number(raw.frequency) : undefined,
 			timeout: raw.timeout ? Number(raw.timeout) : undefined,
+			assertions: assertionsJson,
+			metadata: metadataJson,
 		});
 
 		if (!parsed.success) {
@@ -198,3 +233,31 @@ export async function fetchMonitorsByUser(userId: string) {
 		return { success: false, error: (e as Error).message };
 	}
 }
+
+export async function toggleMonitorPauseAction(monitorId: string) {
+	try {
+		const session = await getSession({ headers: await headers() });
+		if (!session?.user?.id) {
+			return { success: false, error: "Not authenticated" };
+		}
+
+		const existing = await getMonitorById(monitorId);
+		if (!existing) {
+			return { success: false, error: "Monitor not found" };
+		}
+		if (existing.userId !== session.user.id) {
+			return { success: false, error: "Forbidden" };
+		}
+
+		const shouldPause = existing.status === "active";
+		const monitor = await pauseMonitor(monitorId, shouldPause);
+
+		revalidatePath("/dashboard/monitors");
+
+		return { success: true, data: monitor };
+	} catch (e) {
+		console.error("toggleMonitorPauseAction failed:", e);
+		return { success: false, error: (e as Error).message };
+	}
+}
+
