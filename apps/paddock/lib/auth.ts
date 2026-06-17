@@ -1,9 +1,9 @@
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
-import { lastLoginMethod } from "better-auth/plugins"
 import { nextCookies } from "better-auth/next-js";
-import { db, schema } from "@/lib/db";
+import { lastLoginMethod } from "better-auth/plugins";
 import { cache } from "react";
+import { db, schema } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getLocationFromIP } from "@/lib/ip-location";
 
@@ -14,8 +14,8 @@ export const auth = betterAuth({
   }),
   socialProviders: {
     google: {
-    	clientId: env.GOOGLE_CLIENT_ID,
-    	clientSecret: env.GOOGLE_CLIENT_SECRET,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
     github: {
       clientId: env.GITHUB_CLIENT_ID,
@@ -37,8 +37,8 @@ export const auth = betterAuth({
         type: "string",
         required: false,
         defaultValue: "Unknown Location",
-        input: false
-      }
+        input: false,
+      },
     },
   },
   databaseHooks: {
@@ -52,13 +52,13 @@ export const auth = betterAuth({
           return {
             data: {
               ...user,
-              location: loc
-            }
-          }
-        }
-      }
-    }
-  }
+              location: loc,
+            },
+          };
+        },
+      },
+    },
+  },
 });
 
-export const getSession = cache(auth.api.getSession)
+export const getSession = cache(auth.api.getSession);

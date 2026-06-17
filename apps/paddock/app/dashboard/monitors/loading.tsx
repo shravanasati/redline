@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function KpiCardSkeleton() {
   return (
@@ -38,7 +38,6 @@ export default function MonitorsLoading() {
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-
           {/* Page header skeleton */}
           <div className="flex items-center justify-between px-4 lg:px-6">
             <div className="flex flex-col gap-2">
@@ -65,11 +64,16 @@ export default function MonitorsLoading() {
               <CardContent className="p-0 [--card-spacing:0]">
                 {/* Table header */}
                 <div className="flex items-center gap-3 px-4 py-2.5 border-b">
-                  {["w-28", "w-16", "w-48 hidden md:block", "w-16", "w-10 hidden sm:block", "w-8 hidden lg:block ml-auto"].map(
-                    (w, i) => (
-                      <Skeleton key={i} className={`h-3.5 ${w}`} />
-                    ),
-                  )}
+                  {[
+                    "w-28",
+                    "w-16",
+                    "w-48 hidden md:block",
+                    "w-16",
+                    "w-10 hidden sm:block",
+                    "w-8 hidden lg:block ml-auto",
+                  ].map((w, i) => (
+                    <Skeleton key={i} className={`h-3.5 ${w}`} />
+                  ))}
                 </div>
                 {/* Table rows */}
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -78,7 +82,6 @@ export default function MonitorsLoading() {
               </CardContent>
             </Card>
           </div>
-
         </div>
       </div>
     </div>

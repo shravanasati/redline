@@ -1,5 +1,6 @@
 "use client";
 
+import { LoaderIcon, ShieldOffIcon } from "lucide-react";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { revokeOtherSessionsAction } from "@/lib/actions/signout";
-import { LoaderIcon, ShieldOffIcon } from "lucide-react";
 
 export function RevokeAllSessionsButton() {
   const [open, setOpen] = useState(false);

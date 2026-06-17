@@ -1,9 +1,8 @@
-import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { auth, getSession } from "@/lib/auth";
 import { ProfileHeader } from "@/components/dashboard/profile/profile-header";
 import { SessionsList } from "@/components/dashboard/profile/sessions-list";
 import Unauthenticated from "@/components/unauthorized";
+import { auth, getSession } from "@/lib/auth";
 
 export const metadata = {
   title: "Profile",

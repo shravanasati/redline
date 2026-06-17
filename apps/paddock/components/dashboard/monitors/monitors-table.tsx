@@ -1,6 +1,20 @@
 "use client";
 
 import {
+  ActivityIcon,
+  AlertCircleIcon,
+  GlobeIcon,
+  LoaderIcon,
+  NetworkIcon,
+  PauseIcon,
+  PlayIcon,
+  ServerIcon,
+  WifiIcon,
+} from "lucide-react";
+import { useTransition } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
   Table,
   TableBody,
   TableCell,
@@ -8,24 +22,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { MonitorFormModal } from "./monitor-form-modal";
-import { DeleteMonitorButton } from "./delete-monitor-button";
-import {
-  ActivityIcon,
-  GlobeIcon,
-  ServerIcon,
-  WifiIcon,
-  NetworkIcon,
-  AlertCircleIcon,
-  PlayIcon,
-  PauseIcon,
-  LoaderIcon,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { toggleMonitorPauseAction } from "@/lib/actions/monitors";
-import { useTransition } from "react";
-
+import { DeleteMonitorButton } from "./delete-monitor-button";
+import { MonitorFormModal } from "./monitor-form-modal";
 
 type Monitor = {
   id: string;
@@ -73,18 +72,18 @@ function StatusBadge({
       "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
     paused:
       "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    draft:
-      "border-muted-foreground/40 bg-muted text-muted-foreground",
+    draft: "border-muted-foreground/40 bg-muted text-muted-foreground",
   };
   return (
     <Badge variant="outline" className={`gap-1 capitalize ${styles[status]}`}>
       <span
-        className={`size-1.5 rounded-full ${status === "active"
-          ? "bg-emerald-500"
-          : status === "paused"
-            ? "bg-amber-500"
-            : "bg-muted-foreground"
-          }`}
+        className={`size-1.5 rounded-full ${
+          status === "active"
+            ? "bg-emerald-500"
+            : status === "paused"
+              ? "bg-amber-500"
+              : "bg-muted-foreground"
+        }`}
       />
       {status}
     </Badge>
@@ -188,7 +187,10 @@ export function MonitorsTable({ monitors }: { monitors: Monitor[] }) {
               </span>
             </TableCell>
             <TableCell>
-              <StatusBadge status={monitor.status} isFailing={monitor.isFailing} />
+              <StatusBadge
+                status={monitor.status}
+                isFailing={monitor.isFailing}
+              />
             </TableCell>
             <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
               {formatFrequency(monitor.frequency)}
@@ -198,7 +200,10 @@ export function MonitorsTable({ monitors }: { monitors: Monitor[] }) {
             </TableCell>
             <TableCell className="text-right">
               <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <TogglePauseButton monitorId={monitor.id} status={monitor.status} />
+                <TogglePauseButton
+                  monitorId={monitor.id}
+                  status={monitor.status}
+                />
                 <MonitorFormModal mode="edit" monitor={monitor} />
                 <DeleteMonitorButton
                   monitorId={monitor.id}

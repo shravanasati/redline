@@ -12,10 +12,38 @@ interface StatItem {
 }
 
 const stats: StatItem[] = [
-  { raw: 3, display: "12", prefix: "", suffix: "", decimals: 0, label: "Global Regions" },
-  { raw: 30, display: "30s", prefix: "", suffix: "s", decimals: 0, label: "Check Intervals" },
-  { raw: 99.99, display: "99.99%", prefix: "", suffix: "%", decimals: 2, label: "Uptime Tracked" },
-  { raw: 5, display: "<5s", prefix: "<", suffix: "s", decimals: 0, label: "Alert Delivery" },
+  {
+    raw: 3,
+    display: "12",
+    prefix: "",
+    suffix: "",
+    decimals: 0,
+    label: "Global Regions",
+  },
+  {
+    raw: 30,
+    display: "30s",
+    prefix: "",
+    suffix: "s",
+    decimals: 0,
+    label: "Check Intervals",
+  },
+  {
+    raw: 99.99,
+    display: "99.99%",
+    prefix: "",
+    suffix: "%",
+    decimals: 2,
+    label: "Uptime Tracked",
+  },
+  {
+    raw: 5,
+    display: "<5s",
+    prefix: "<",
+    suffix: "s",
+    decimals: 0,
+    label: "Alert Delivery",
+  },
 ];
 
 function useCountUp(target: number, decimals: number, active: boolean) {
@@ -31,7 +59,7 @@ function useCountUp(target: number, decimals: number, active: boolean) {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
       // ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
+      const eased = 1 - (1 - progress) ** 3;
       setValue(parseFloat((eased * target).toFixed(decimals)));
       if (progress < 1) rafRef.current = requestAnimationFrame(tick);
     };
@@ -45,9 +73,19 @@ function useCountUp(target: number, decimals: number, active: boolean) {
   return value;
 }
 
-function StatCard({ stat, active, index }: { stat: StatItem; active: boolean; index: number }) {
+function StatCard({
+  stat,
+  active,
+  index,
+}: {
+  stat: StatItem;
+  active: boolean;
+  index: number;
+}) {
   const value = useCountUp(stat.raw, stat.decimals, active);
-  const displayed = active ? `${stat.prefix}${value.toFixed(stat.decimals)}${stat.suffix}` : "—";
+  const displayed = active
+    ? `${stat.prefix}${value.toFixed(stat.decimals)}${stat.suffix}`
+    : "—";
 
   return (
     <div
@@ -64,7 +102,9 @@ function StatCard({ stat, active, index }: { stat: StatItem; active: boolean; in
           {displayed}
         </span>
       </div>
-      <div className="mt-1.5 text-sm font-medium text-muted-foreground">{stat.label}</div>
+      <div className="mt-1.5 text-sm font-medium text-muted-foreground">
+        {stat.label}
+      </div>
 
       {/* Bottom accent line */}
       <div className="mx-auto mt-3 h-0.5 w-8 rounded-full bg-linear-to-r from-primary/60 to-primary/20" />
@@ -86,7 +126,7 @@ export function StatsCounter() {
           observer.disconnect();
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 },
     );
     observer.observe(el);
     return () => observer.disconnect();

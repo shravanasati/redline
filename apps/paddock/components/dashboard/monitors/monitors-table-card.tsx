@@ -1,3 +1,4 @@
+import { MonitorsTable } from "@/components/dashboard/monitors/monitors-table";
 import {
   Card,
   CardContent,
@@ -5,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { MonitorsTable } from "@/components/dashboard/monitors/monitors-table";
 import type { Monitor } from "@/lib/db/crud/monitors";
 
 type MonitorsTableCardProps = {

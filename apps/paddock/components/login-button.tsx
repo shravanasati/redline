@@ -1,10 +1,10 @@
 "use client";
 
+import type React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { authClient, signIn, SocialProvider } from "@/lib/auth-client";
+import { authClient, type SocialProvider, signIn } from "@/lib/auth-client";
 import { capitalize } from "@/lib/utils";
-import React from "react";
 
 function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -43,18 +43,18 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
       />
       <path d="M1 1h22v22H1z" fill="none" />
     </svg>
-  )
+  );
 }
 
 export function LoginButton({ provider }: { provider: SocialProvider }) {
   const lastMethod = authClient.getLastUsedLoginMethod();
-  let Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  let Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   if (provider === "github") {
-    Icon = GithubIcon
+    Icon = GithubIcon;
   } else if (provider === "google") {
-    Icon = GoogleIcon
+    Icon = GoogleIcon;
   } else {
-    throw new Error(`Unsupported provider: ${provider}`)
+    throw new Error(`Unsupported provider: ${provider}`);
   }
   return (
     <Button

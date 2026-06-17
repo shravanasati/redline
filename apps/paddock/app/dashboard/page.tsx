@@ -1,15 +1,15 @@
-import data from "./data.json"
-import { getSession } from "@/lib/auth"
-import { headers } from "next/headers"
-import Unauthenticated from "@/components/unauthorized"
-import { ChartAreaInteractive } from "@/components/chart-area-interactive"
-import { DataTable } from "@/components/data-table"
-import { SectionCards } from "@/components/section-cards"
+import { headers } from "next/headers";
+import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { DataTable } from "@/components/data-table";
+import { SectionCards } from "@/components/section-cards";
+import Unauthenticated from "@/components/unauthorized";
+import { getSession } from "@/lib/auth";
+import data from "./data.json";
 
 export default async function Dashboard() {
-  const session = await getSession({ headers: await headers() })
+  const session = await getSession({ headers: await headers() });
   if (!session?.user.id) {
-    return <Unauthenticated />
+    return <Unauthenticated />;
   }
   return (
     <div className="flex flex-1 flex-col">
@@ -23,5 +23,5 @@ export default async function Dashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }

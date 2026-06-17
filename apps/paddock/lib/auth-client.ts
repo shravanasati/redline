@@ -1,8 +1,8 @@
+import { lastLoginMethodClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { sanitizeNextURL } from "@/lib/url";
-import { lastLoginMethodClient } from "better-auth/client/plugins";
 export const authClient = createAuthClient({
-  plugins: [lastLoginMethodClient()]
+  plugins: [lastLoginMethodClient()],
 });
 
 export type SocialProvider = "github" | "google";

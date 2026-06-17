@@ -14,7 +14,8 @@ const features = [
     description:
       "12 pop locations across 5 continents. Every check runs from 3+ nodes simultaneously for zero false positives.",
     accent: "from-primary/20 to-primary/5",
-    iconAccent: "from-primary/15 to-primary/5 text-primary ring-primary/10 group-hover:from-primary/30 group-hover:to-primary/10 group-hover:ring-primary/20",
+    iconAccent:
+      "from-primary/15 to-primary/5 text-primary ring-primary/10 group-hover:from-primary/30 group-hover:to-primary/10 group-hover:ring-primary/20",
   },
   {
     icon: Bell,
@@ -22,7 +23,8 @@ const features = [
     description:
       "Slack, PagerDuty, email, SMS, or webhook — pick your channel. Alerts fire in under 5 seconds of detection.",
     accent: "from-secondary/20 to-secondary/5",
-    iconAccent: "from-secondary/15 to-secondary/5 text-secondary-foreground ring-secondary/10 group-hover:from-secondary/30 group-hover:to-secondary/10 group-hover:ring-secondary/20",
+    iconAccent:
+      "from-secondary/15 to-secondary/5 text-secondary-foreground ring-secondary/10 group-hover:from-secondary/30 group-hover:to-secondary/10 group-hover:ring-secondary/20",
   },
   {
     icon: BarChart3,
@@ -30,7 +32,8 @@ const features = [
     description:
       "Live latency heatmaps, uptime calendars, and response-time trends. Shareable with your whole team.",
     accent: "from-accent/20 to-accent/5",
-    iconAccent: "from-accent/15 to-accent/5 text-accent-foreground ring-accent/10 group-hover:from-accent/30 group-hover:to-accent/10 group-hover:ring-accent/20",
+    iconAccent:
+      "from-accent/15 to-accent/5 text-accent-foreground ring-accent/10 group-hover:from-accent/30 group-hover:to-accent/10 group-hover:ring-accent/20",
   },
   {
     icon: RefreshCw,
@@ -38,7 +41,8 @@ const features = [
     description:
       "Checks run as fast as every 30 seconds from every node. No more waiting 5 minutes to know you're down.",
     accent: "from-primary/20 to-primary/5",
-    iconAccent: "from-primary/15 to-primary/5 text-primary ring-primary/10 group-hover:from-primary/30 group-hover:to-primary/10 group-hover:ring-primary/20",
+    iconAccent:
+      "from-primary/15 to-primary/5 text-primary ring-primary/10 group-hover:from-primary/30 group-hover:to-primary/10 group-hover:ring-primary/20",
   },
   {
     icon: Shield,
@@ -46,7 +50,8 @@ const features = [
     description:
       "Hosted status pages with custom domains and branding. Keep your users informed without exposing internals.",
     accent: "from-secondary/20 to-secondary/5",
-    iconAccent: "from-secondary/15 to-secondary/5 text-secondary-foreground ring-secondary/10 group-hover:from-secondary/30 group-hover:to-secondary/10 group-hover:ring-secondary/20",
+    iconAccent:
+      "from-secondary/15 to-secondary/5 text-secondary-foreground ring-secondary/10 group-hover:from-secondary/30 group-hover:to-secondary/10 group-hover:ring-secondary/20",
   },
   {
     icon: Gauge,
@@ -54,7 +59,8 @@ const features = [
     description:
       "Monitor certificate expiry, DNS resolution, and response body matching alongside basic uptime checks.",
     accent: "from-accent/20 to-accent/5",
-    iconAccent: "from-accent/15 to-accent/5 text-accent-foreground ring-accent/10 group-hover:from-accent/30 group-hover:to-accent/10 group-hover:ring-accent/20",
+    iconAccent:
+      "from-accent/15 to-accent/5 text-accent-foreground ring-accent/10 group-hover:from-accent/30 group-hover:to-accent/10 group-hover:ring-accent/20",
   },
 ];
 

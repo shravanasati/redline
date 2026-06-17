@@ -1,10 +1,10 @@
 import { headers } from "next/headers";
-import { getSession } from "@/lib/auth";
-import { fetchMonitorsByUser } from "@/lib/actions/monitors";
-import Unauthenticated from "@/components/unauthorized";
-import { MonitorsPageHeader } from "@/components/dashboard/monitors/monitors-page-header";
 import { MonitorsKpiCards } from "@/components/dashboard/monitors/monitors-kpi-cards";
+import { MonitorsPageHeader } from "@/components/dashboard/monitors/monitors-page-header";
 import { MonitorsTableCard } from "@/components/dashboard/monitors/monitors-table-card";
+import Unauthenticated from "@/components/unauthorized";
+import { fetchMonitorsByUser } from "@/lib/actions/monitors";
+import { getSession } from "@/lib/auth";
 
 export default async function MonitorsPage() {
   const session = await getSession({ headers: await headers() });

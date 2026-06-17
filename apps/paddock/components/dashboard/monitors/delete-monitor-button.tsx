@@ -1,5 +1,6 @@
 "use client";
 
+import { LoaderIcon, Trash2Icon } from "lucide-react";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { deleteMonitorAction } from "@/lib/actions/monitors";
-import { Trash2Icon, LoaderIcon } from "lucide-react";
 
 type DeleteMonitorButtonProps = {
   monitorId: string;
@@ -61,8 +61,8 @@ export function DeleteMonitorButton({
           <DialogTitle>Delete Monitor</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-foreground">{monitorName}</span>?
-            This action cannot be undone.
+            <span className="font-semibold text-foreground">{monitorName}</span>
+            ? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 

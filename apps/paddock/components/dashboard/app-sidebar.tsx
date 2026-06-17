@@ -1,11 +1,25 @@
-"use client"
+"use client";
 
-import * as React from "react"
-
+import {
+  Activity,
+  CameraIcon,
+  ChartBarIcon,
+  CircleHelpIcon,
+  DatabaseIcon,
+  Eye,
+  FileChartColumnIcon,
+  FileIcon,
+  FileTextIcon,
+  LayoutDashboardIcon,
+  SearchIcon,
+  Settings2Icon,
+} from "lucide-react";
+import Link from "next/link";
+import type * as React from "react";
 // import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/dashboard/nav-main"
-import { NavSecondary } from "@/components/dashboard/nav-secondary"
-import { NavUser } from "@/components/dashboard/nav-user"
+import { NavMain } from "@/components/dashboard/nav-main";
+import { NavSecondary } from "@/components/dashboard/nav-secondary";
+import { NavUser } from "@/components/dashboard/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -14,37 +28,25 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { LayoutDashboardIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraIcon, FileTextIcon, Settings2Icon, CircleHelpIcon, SearchIcon, DatabaseIcon, FileChartColumnIcon, FileIcon, CommandIcon, Activity, Eye } from "lucide-react"
-import { authClient } from "@/lib/auth-client"
-import { usePathname } from "next/navigation"
-import Link from "next/link"
+} from "@/components/ui/sidebar";
+import { authClient } from "@/lib/auth-client";
 
 const data = {
   navMain: [
     {
       title: "Dashboard",
       url: "/dashboard",
-      icon: (
-        <LayoutDashboardIcon
-        />
-      ),
+      icon: <LayoutDashboardIcon />,
     },
     {
       title: "Monitors",
       url: "/dashboard/monitors",
-      icon: (
-        <Eye
-        />
-      ),
+      icon: <Eye />,
     },
     {
       title: "Analytics",
       url: "#",
-      icon: (
-        <ChartBarIcon
-        />
-      ),
+      icon: <ChartBarIcon />,
     },
     // {
     //   title: "Projects",
@@ -66,10 +68,7 @@ const data = {
   navClouds: [
     {
       title: "Capture",
-      icon: (
-        <CameraIcon
-        />
-      ),
+      icon: <CameraIcon />,
       isActive: true,
       url: "#",
       items: [
@@ -85,10 +84,7 @@ const data = {
     },
     {
       title: "Proposal",
-      icon: (
-        <FileTextIcon
-        />
-      ),
+      icon: <FileTextIcon />,
       url: "#",
       items: [
         {
@@ -103,10 +99,7 @@ const data = {
     },
     {
       title: "Prompts",
-      icon: (
-        <FileTextIcon
-        />
-      ),
+      icon: <FileTextIcon />,
       url: "#",
       items: [
         {
@@ -124,69 +117,47 @@ const data = {
     {
       title: "Settings",
       url: "#",
-      icon: (
-        <Settings2Icon
-        />
-      ),
+      icon: <Settings2Icon />,
     },
     {
       title: "Get Help",
       url: "#",
-      icon: (
-        <CircleHelpIcon
-        />
-      ),
+      icon: <CircleHelpIcon />,
     },
     {
       title: "Search",
       url: "#",
-      icon: (
-        <SearchIcon
-        />
-      ),
+      icon: <SearchIcon />,
     },
   ],
   documents: [
     {
       name: "Data Library",
       url: "#",
-      icon: (
-        <DatabaseIcon
-        />
-      ),
+      icon: <DatabaseIcon />,
     },
     {
       name: "Reports",
       url: "#",
-      icon: (
-        <FileChartColumnIcon
-        />
-      ),
+      icon: <FileChartColumnIcon />,
     },
     {
       name: "Word Assistant",
       url: "#",
-      icon: (
-        <FileIcon
-        />
-      ),
+      icon: <FileIcon />,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const {
-    data: session,
-    isPending,
-    error,
-  } = authClient.useSession() 
+  const { data: session, isPending, error } = authClient.useSession();
   const userData = {
     name: session?.user?.name,
     email: session?.user?.email,
     avatar: session?.user?.image,
     isPending: isPending,
-    error: error
-  }
+    error: error,
+  };
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -213,5 +184,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

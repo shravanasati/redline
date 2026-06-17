@@ -3,10 +3,10 @@
 import { Activity, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
-import { usePathname } from "next/navigation";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -16,8 +16,8 @@ const navLinks = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const currentPath = usePathname()
-  if (currentPath.includes("/dashboard")) return null
+  const currentPath = usePathname();
+  if (currentPath.includes("/dashboard")) return null;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md mb-16">

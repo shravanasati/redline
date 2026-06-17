@@ -1,5 +1,6 @@
 "use client";
 
+import { LoaderIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,8 +22,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createMonitorAction, updateMonitorAction } from "@/lib/actions/monitors";
-import { PlusIcon, PencilIcon, LoaderIcon, Trash2Icon } from "lucide-react";
+import {
+  createMonitorAction,
+  updateMonitorAction,
+} from "@/lib/actions/monitors";
 
 type Monitor = {
   id: string;
@@ -51,10 +54,10 @@ const MONITOR_TYPES = ["ICMP", "HTTP", "HTTPS", "TCP", "DNS"] as const;
 
 const FREQUENCY_OPTIONS = [
   { label: "30 seconds", value: 30 },
-  { label: "1 minute",   value: 60 },
-  { label: "2 minutes",  value: 120 },
-  { label: "3 minutes",  value: 180 },
-  { label: "5 minutes",  value: 300 },
+  { label: "1 minute", value: 60 },
+  { label: "2 minutes", value: 120 },
+  { label: "3 minutes", value: 180 },
+  { label: "5 minutes", value: 300 },
   { label: "10 minutes", value: 600 },
   { label: "15 minutes", value: 900 },
   { label: "30 minutes", value: 1800 },
@@ -79,9 +82,7 @@ type HeaderItem = {
 
 function FieldError({ errors }: { errors?: string[] }) {
   if (!errors?.length) return null;
-  return (
-    <p className="text-xs text-destructive mt-0.5">{errors[0]}</p>
-  );
+  return <p className="text-xs text-destructive mt-0.5">{errors[0]}</p>;
 }
 
 export function MonitorFormModal(props: MonitorFormModalProps) {
@@ -148,16 +149,18 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
         setAssertions(monitor.assertions ?? []);
         setMethod(monitor.metadata?.method ?? "GET");
         setHeadersList(
-          Object.entries(monitor.metadata?.headers ?? {}).map(([key, value]) => ({
-            key,
-            value: String(value),
-          }))
+          Object.entries(monitor.metadata?.headers ?? {}).map(
+            ([key, value]) => ({
+              key,
+              value: String(value),
+            }),
+          ),
         );
         setReqBody(monitor.metadata?.body ?? "");
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, isEdit, monitor]);
+  }, [open, isEdit, monitor, snapFrequency]);
 
   // Handle Assertion additions
   const addAssertion = () => {
@@ -174,13 +177,13 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
   const updateAssertion = (
     index: number,
     field: keyof AssertionItem,
-    val: any
+    val: any,
   ) => {
     setAssertions((prev) =>
       prev.map((item, i) => {
         if (i !== index) return item;
         const updated = { ...item, [field]: val };
-        
+
         // Auto-correct operator and values when target changes
         if (field === "target") {
           if (val === "status_code") {
@@ -195,7 +198,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
           }
         }
         return updated;
-      })
+      }),
     );
   };
 
@@ -208,23 +211,31 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
     setHeadersList((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateHeader = (index: number, field: keyof HeaderItem, val: string) => {
+  const updateHeader = (
+    index: number,
+    field: keyof HeaderItem,
+    val: string,
+  ) => {
     setHeadersList((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: val } : item))
+      prev.map((item, i) => (i === index ? { ...item, [field]: val } : item)),
     );
   };
 
   // Serialize lists for hidden inputs
-  const serializedHeaders = headersList.reduce((acc, curr) => {
-    if (curr.key.trim()) {
-      acc[curr.key.trim()] = curr.value;
-    }
-    return acc;
-  }, {} as Record<string, string>);
+  const serializedHeaders = headersList.reduce(
+    (acc, curr) => {
+      if (curr.key.trim()) {
+        acc[curr.key.trim()] = curr.value;
+      }
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   const serializedMetadata = {
     method,
-    headers: Object.keys(serializedHeaders).length > 0 ? serializedHeaders : undefined,
+    headers:
+      Object.keys(serializedHeaders).length > 0 ? serializedHeaders : undefined,
     body: method !== "GET" && reqBody.trim() ? reqBody : undefined,
   };
 
@@ -261,7 +272,9 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
 
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Monitor" : "Create Monitor"}</DialogTitle>
+          <DialogTitle>
+            {isEdit ? "Edit Monitor" : "Create Monitor"}
+          </DialogTitle>
           <DialogDescription>
             {isEdit
               ? "Update the details and rules for this monitor."
@@ -273,10 +286,22 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
           {/* Hidden inputs for select and complex values */}
           <input type="hidden" name="type" value={type} />
           <input type="hidden" name="frequency" value={frequency} />
-          <input type="hidden" name="assertions" value={JSON.stringify(assertions)} />
-          <input type="hidden" name="metadata" value={JSON.stringify(serializedMetadata)} />
+          <input
+            type="hidden"
+            name="assertions"
+            value={JSON.stringify(assertions)}
+          />
+          <input
+            type="hidden"
+            name="metadata"
+            value={JSON.stringify(serializedMetadata)}
+          />
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="general">General Config</TabsTrigger>
               <TabsTrigger value="assertions">Assertions</TabsTrigger>
@@ -332,7 +357,9 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                   <Label>Frequency</Label>
                   <Select
                     value={String(frequency)}
-                    onValueChange={(v) => setFrequency(Number(v) as FrequencyValue)}
+                    onValueChange={(v) =>
+                      setFrequency(Number(v) as FrequencyValue)
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select frequency" />
@@ -350,7 +377,10 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
 
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="monitor-timeout">
-                    Timeout <span className="text-muted-foreground text-xs">(1-60s)</span>
+                    Timeout{" "}
+                    <span className="text-muted-foreground text-xs">
+                      (1-60s)
+                    </span>
                   </Label>
                   <Input
                     id="monitor-timeout"
@@ -367,10 +397,15 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
             </TabsContent>
 
             {/* Assertions Settings */}
-            <TabsContent value="assertions" className="flex flex-col gap-3 pt-3">
+            <TabsContent
+              value="assertions"
+              className="flex flex-col gap-3 pt-3"
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm font-semibold">Rules & Thresholds</Label>
+                  <Label className="text-sm font-semibold">
+                    Rules & Thresholds
+                  </Label>
                   <p className="text-xs text-muted-foreground">
                     Define what conditions count as a successful check.
                   </p>
@@ -394,21 +429,32 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                   </div>
                 ) : (
                   assertions.map((assertion, idx) => (
-                    <div key={idx} className="flex items-center gap-2 bg-muted/40 p-2 rounded-2xl border border-transparent dark:border-foreground/5">
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 bg-muted/40 p-2 rounded-2xl border border-transparent dark:border-foreground/5"
+                    >
                       <div className="grid grid-cols-3 gap-2 flex-1">
                         {/* Target Select */}
                         <Select
                           value={assertion.target}
                           onValueChange={(val) =>
-                            updateAssertion(idx, "target", val as AssertionTarget)
+                            updateAssertion(
+                              idx,
+                              "target",
+                              val as AssertionTarget,
+                            )
                           }
                         >
                           <SelectTrigger className="bg-background">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="status_code">Status Code</SelectItem>
-                            <SelectItem value="response_time">Response Time (ms)</SelectItem>
+                            <SelectItem value="status_code">
+                              Status Code
+                            </SelectItem>
+                            <SelectItem value="response_time">
+                              Response Time (ms)
+                            </SelectItem>
                             <SelectItem value="body">Response Body</SelectItem>
                           </SelectContent>
                         </Select>
@@ -417,7 +463,11 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                         <Select
                           value={assertion.operator}
                           onValueChange={(val) =>
-                            updateAssertion(idx, "operator", val as AssertionOperator)
+                            updateAssertion(
+                              idx,
+                              "operator",
+                              val as AssertionOperator,
+                            )
                           }
                           disabled={
                             assertion.target === "status_code" ||
@@ -445,7 +495,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                               "value",
                               assertion.target === "body"
                                 ? e.target.value
-                                : Number(e.target.value)
+                                : Number(e.target.value),
                             )
                           }
                           required
@@ -511,14 +561,18 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                       <Input
                         placeholder="Header-Name"
                         value={header.key}
-                        onChange={(e) => updateHeader(idx, "key", e.target.value)}
+                        onChange={(e) =>
+                          updateHeader(idx, "key", e.target.value)
+                        }
                         className="flex-1"
                         required
                       />
                       <Input
                         placeholder="value"
                         value={header.value}
-                        onChange={(e) => updateHeader(idx, "value", e.target.value)}
+                        onChange={(e) =>
+                          updateHeader(idx, "value", e.target.value)
+                        }
                         className="flex-1"
                         required
                       />

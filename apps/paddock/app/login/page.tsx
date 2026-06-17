@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { LoginButton } from "@/components/login-button";
 import {
   Card,
@@ -8,11 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getSession } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 export default async function LoginPage() {
   const session = await getSession({ headers: await headers() });
-  if (session && session.user) {
+  if (session?.user) {
     redirect("/dashboard");
   }
 

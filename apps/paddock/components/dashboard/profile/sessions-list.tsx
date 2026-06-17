@@ -1,21 +1,21 @@
 import {
+  ClockIcon,
+  GlobeIcon,
+  MonitorIcon,
+  SmartphoneIcon,
+  TabletIcon,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  MonitorIcon,
-  SmartphoneIcon,
-  TabletIcon,
-  GlobeIcon,
-  ClockIcon,
-} from "lucide-react";
-import { RevokeSessionButton } from "./revoke-session-button";
 import { RevokeAllSessionsButton } from "./revoke-all-sessions-button";
+import { RevokeSessionButton } from "./revoke-session-button";
 
 type Session = {
   id: string;
@@ -37,7 +37,8 @@ function parseUserAgent(ua: string | null | undefined): {
   os: string;
   device: "desktop" | "mobile" | "tablet";
 } {
-  if (!ua) return { browser: "Unknown Browser", os: "Unknown OS", device: "desktop" };
+  if (!ua)
+    return { browser: "Unknown Browser", os: "Unknown OS", device: "desktop" };
 
   const uaLower = ua.toLowerCase();
 
@@ -51,13 +52,16 @@ function parseUserAgent(ua: string | null | undefined): {
   if (uaLower.includes("edg/")) browser = "Edge";
   else if (uaLower.includes("chrome/")) browser = "Chrome";
   else if (uaLower.includes("firefox/")) browser = "Firefox";
-  else if (uaLower.includes("safari/") && !uaLower.includes("chrome")) browser = "Safari";
-  else if (uaLower.includes("opr/") || uaLower.includes("opera")) browser = "Opera";
+  else if (uaLower.includes("safari/") && !uaLower.includes("chrome"))
+    browser = "Safari";
+  else if (uaLower.includes("opr/") || uaLower.includes("opera"))
+    browser = "Opera";
 
   // OS
   let os = "Unknown OS";
   if (uaLower.includes("windows")) os = "Windows";
-  else if (uaLower.includes("mac os") || uaLower.includes("macos")) os = "macOS";
+  else if (uaLower.includes("mac os") || uaLower.includes("macos"))
+    os = "macOS";
   else if (uaLower.includes("iphone") || uaLower.includes("ipad")) os = "iOS";
   else if (uaLower.includes("android")) os = "Android";
   else if (uaLower.includes("linux")) os = "Linux";
@@ -83,7 +87,10 @@ function formatRelativeTime(date: Date): string {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
 }
 
 function formatExpiry(date: Date): string {
@@ -99,7 +106,7 @@ export function SessionsList({
   currentSessionToken,
 }: SessionsListProps) {
   const otherSessionsCount = sessions.filter(
-    (s) => s.token !== currentSessionToken
+    (s) => s.token !== currentSessionToken,
   ).length;
 
   return (
@@ -120,7 +127,7 @@ export function SessionsList({
       <CardContent className="px-0 pb-0">
         <Separator />
         <ul className="divide-y">
-          {sessions.map((session, idx) => {
+          {sessions.map((session, _idx) => {
             const isCurrent = session.token === currentSessionToken;
             const { browser, os, device } = parseUserAgent(session.userAgent);
 

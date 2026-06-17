@@ -3,7 +3,7 @@ import { Fira_Code, Lora, Poppins } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const fontSans = Poppins({
   subsets: ["latin"],
