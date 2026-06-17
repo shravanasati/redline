@@ -6,10 +6,22 @@ export function CTA() {
   return (
     <section className="border-t border-border/40 px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card px-6 py-16 shadow-xl sm:px-16 sm:py-20">
-          <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card px-6 py-20 shadow-xl sm:px-16 sm:py-28">
+          <div className="pointer-events-none absolute inset-0">
             <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
             <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" />
+            {/* Rotating grid — -inset-[150%] makes element 4× parent in each axis,
+                 auto-sized (no w/h), so center is always exactly at card center.
+                 At any rotation angle the card corners stay fully covered. */}
+            <div
+              className="absolute -inset-[150%] animate-grid-move text-muted-foreground/15 dark:text-muted-foreground/20"
+              style={{
+                backgroundImage:
+                  "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)",
+                backgroundSize: "60px 60px",
+                transformOrigin: "center center",
+              }}
+            />
           </div>
 
           <div className="relative">
