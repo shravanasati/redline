@@ -14,13 +14,40 @@ import {
   updateMonitor,
 } from "@/lib/db/crud/monitors";
 import { monitorTypeEnum } from "@/lib/db/schema/monitors";
+import { isPrivateIp } from "@/lib/url";
 
 const monitorTypeValues = monitorTypeEnum.enumValues;
 
 const createMonitorSchema = z.object({
   name: z.string().min(1).max(255),
   type: z.enum(monitorTypeValues),
-  endpoint: z.url(),
+  endpoint: z.url().refine(
+    (val) => {
+      try {
+        const url = new URL(val);
+        let hostname = url.hostname;
+        if (hostname.startsWith("[") && hostname.endsWith("]")) {
+          hostname = hostname.slice(1, -1);
+        }
+
+        const normalizedHost = hostname.toLowerCase();
+        if (
+          normalizedHost === "localhost" ||
+          normalizedHost.endsWith(".localhost") ||
+          normalizedHost.endsWith(".local")
+        ) {
+          return false;
+        }
+
+        return !isPrivateIp(hostname);
+      } catch {
+        return false;
+      }
+    },
+    {
+      message: "Endpoint cannot be a private IP address or localhost",
+    },
+  ),
   frequency: z.union([
     z.literal(30),
     z.literal(60),
