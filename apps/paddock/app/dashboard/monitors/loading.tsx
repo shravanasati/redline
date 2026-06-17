@@ -72,11 +72,13 @@ export default function MonitorsLoading() {
                     "w-10 hidden sm:block",
                     "w-8 hidden lg:block ml-auto",
                   ].map((w, i) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton array
                     <Skeleton key={i} className={`h-3.5 ${w}`} />
                   ))}
                 </div>
                 {/* Table rows */}
                 {Array.from({ length: 5 }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton array
                   <TableRowSkeleton key={i} />
                 ))}
               </CardContent>

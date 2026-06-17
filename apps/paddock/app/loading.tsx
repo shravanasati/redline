@@ -8,6 +8,7 @@ export default function Loading() {
         <div className="relative flex h-24 w-24 items-center justify-center">
           {/* Outer dotted ring rotating clockwise */}
           <svg
+            aria-hidden="true"
             className="absolute inset-0 h-full w-full animate-spin text-primary"
             viewBox="0 0 100 100"
             style={{ animationDuration: "3s" }}
@@ -27,6 +28,7 @@ export default function Loading() {
 
           {/* Inner dotted ring rotating counter-clockwise */}
           <svg
+            aria-hidden="true"
             className="absolute inset-0 h-full w-full animate-spin text-secondary"
             viewBox="0 0 100 100"
             style={{

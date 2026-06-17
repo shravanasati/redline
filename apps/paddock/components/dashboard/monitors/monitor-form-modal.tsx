@@ -1,7 +1,13 @@
 "use client";
 
 import { LoaderIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +33,12 @@ import {
   updateMonitorAction,
 } from "@/lib/actions/monitors";
 
+type MonitorMetadata = {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+};
+
 type Monitor = {
   id: string;
   name: string;
@@ -35,8 +47,8 @@ type Monitor = {
   frequency: number;
   timeout: number;
   status: "active" | "paused" | "draft";
-  assertions?: any;
-  metadata?: any;
+  assertions?: AssertionItem[];
+  metadata?: MonitorMetadata;
 };
 
 type CreateMonitorModalProps = {
@@ -49,6 +61,22 @@ type EditMonitorModalProps = {
 };
 
 type MonitorFormModalProps = CreateMonitorModalProps | EditMonitorModalProps;
+
+type AssertionTarget = "status_code" | "body" | "response_time";
+type AssertionOperator = "equals" | "contains" | "less_than";
+
+type AssertionItem = {
+  id: string;
+  target: AssertionTarget;
+  operator: AssertionOperator;
+  value: string | number;
+};
+
+type HeaderItem = {
+  id: string;
+  key: string;
+  value: string;
+};
 
 const MONITOR_TYPES = ["ICMP", "HTTP", "HTTPS", "TCP", "DNS"] as const;
 
@@ -66,20 +94,6 @@ const FREQUENCY_OPTIONS = [
 
 type FrequencyValue = (typeof FREQUENCY_OPTIONS)[number]["value"];
 
-type AssertionTarget = "status_code" | "body" | "response_time";
-type AssertionOperator = "equals" | "contains" | "less_than";
-
-type AssertionItem = {
-  target: AssertionTarget;
-  operator: AssertionOperator;
-  value: string | number;
-};
-
-type HeaderItem = {
-  key: string;
-  value: string;
-};
-
 function FieldError({ errors }: { errors?: string[] }) {
   if (!errors?.length) return null;
   return <p className="text-xs text-destructive mt-0.5">{errors[0]}</p>;
@@ -90,9 +104,8 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
   const monitor = isEdit ? props.monitor : undefined;
 
   // Bind monitorId for edit mode
-  const boundUpdateAction = isEdit
-    ? updateMonitorAction.bind(null, monitor!.id)
-    : null;
+  const boundUpdateAction =
+    isEdit && monitor ? updateMonitorAction.bind(null, monitor.id) : null;
 
   const [createState, createAction, createPending] = useActionState(
     createMonitorAction,
@@ -120,10 +133,10 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
   const [reqBody, setReqBody] = useState<string>("");
 
   // Snap frequency
-  const snapFrequency = (v?: number): FrequencyValue => {
+  const snapFrequency = useCallback((v?: number): FrequencyValue => {
     const match = FREQUENCY_OPTIONS.find((o) => o.value === v);
     return match ? match.value : 60;
-  };
+  }, []);
 
   useEffect(() => {
     if (state && "success" in state && state.success) {
@@ -151,6 +164,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
         setHeadersList(
           Object.entries(monitor.metadata?.headers ?? {}).map(
             ([key, value]) => ({
+              id: crypto.randomUUID(),
               key,
               value: String(value),
             }),
@@ -159,14 +173,18 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
         setReqBody(monitor.metadata?.body ?? "");
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, isEdit, monitor, snapFrequency]);
 
   // Handle Assertion additions
   const addAssertion = () => {
     setAssertions((prev) => [
       ...prev,
-      { target: "status_code", operator: "equals", value: 200 },
+      {
+        id: crypto.randomUUID(),
+        target: "status_code",
+        operator: "equals",
+        value: 200,
+      },
     ]);
   };
 
@@ -177,7 +195,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
   const updateAssertion = (
     index: number,
     field: keyof AssertionItem,
-    val: any,
+    val: string | number,
   ) => {
     setAssertions((prev) =>
       prev.map((item, i) => {
@@ -204,20 +222,19 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
 
   // Handle Header additions
   const addHeader = () => {
-    setHeadersList((prev) => [...prev, { key: "", value: "" }]);
+    setHeadersList((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), key: "", value: "" },
+    ]);
   };
 
-  const removeHeader = (index: number) => {
-    setHeadersList((prev) => prev.filter((_, i) => i !== index));
+  const removeHeader = (id: string) => {
+    setHeadersList((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const updateHeader = (
-    index: number,
-    field: keyof HeaderItem,
-    val: string,
-  ) => {
+  const updateHeader = (id: string, field: keyof HeaderItem, val: string) => {
     setHeadersList((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: val } : item)),
+      prev.map((item) => (item.id === id ? { ...item, [field]: val } : item)),
     );
   };
 
@@ -430,7 +447,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                 ) : (
                   assertions.map((assertion, idx) => (
                     <div
-                      key={idx}
+                      key={assertion.id}
                       className="flex items-center gap-2 bg-muted/40 p-2 rounded-2xl border border-transparent dark:border-foreground/5"
                     >
                       <div className="grid grid-cols-3 gap-2 flex-1">
@@ -556,13 +573,13 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                     No custom headers configured.
                   </p>
                 ) : (
-                  headersList.map((header, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
+                  headersList.map((header) => (
+                    <div key={header.id} className="flex items-center gap-2">
                       <Input
                         placeholder="Header-Name"
                         value={header.key}
                         onChange={(e) =>
-                          updateHeader(idx, "key", e.target.value)
+                          updateHeader(header.id, "key", e.target.value)
                         }
                         className="flex-1"
                         required
@@ -571,7 +588,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                         placeholder="value"
                         value={header.value}
                         onChange={(e) =>
-                          updateHeader(idx, "value", e.target.value)
+                          updateHeader(header.id, "value", e.target.value)
                         }
                         className="flex-1"
                         required
@@ -580,7 +597,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                         type="button"
                         variant="ghost"
                         size="icon-sm"
-                        onClick={() => removeHeader(idx)}
+                        onClick={() => removeHeader(header.id)}
                         className="hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2Icon className="size-4" />
