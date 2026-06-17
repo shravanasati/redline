@@ -83,13 +83,19 @@ export function Hero() {
           >
             Never miss an outage.
             <br />
-            <span className="bg-linear-to-r from-destructive to-primary bg-clip-text text-transparent">
-              Monitor{" "}
+            <span>
+              <span className="bg-linear-to-r from-destructive to-primary bg-clip-text text-transparent">
+                Monitor{" "}
+              </span>
               <span className="relative inline-block">
-                everywhere
+                <span className="bg-linear-to-r from-destructive to-primary bg-clip-text text-transparent">
+                  everywhere
+                </span>
                 <SlantedUnderline />
               </span>
-              .
+              <span className="bg-linear-to-r from-destructive to-primary bg-clip-text text-transparent">
+                .
+              </span>
             </span>
           </h1>
 

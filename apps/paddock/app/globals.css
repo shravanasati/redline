@@ -146,6 +146,11 @@
     hsl(325.78 58.1800% 56.8600% / 1);
   --shadow-2xl: 3px 3px 0px 0px hsl(325.78 58.1800% 56.8600% / 2.5);
   --tracking-normal: 0em;
+
+  /* scrollbar smoothing and invisible */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-scrollbar: none;
 }
 
 .dark {

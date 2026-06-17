@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
 
-export function ThemeSwitcher() {
+export function ThemeSwitcher({className}: {className?: string}) {
   const { setTheme, resolvedTheme } = useTheme();
 
   return (
@@ -14,7 +14,7 @@ export function ThemeSwitcher() {
       variant="outline"
       size="icon"
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-      className="relative"
+      className={`${className} relative`}
     >
       <AnimatePresence initial={false} mode="wait">
         <motion.div
