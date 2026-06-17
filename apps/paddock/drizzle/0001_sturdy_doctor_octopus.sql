@@ -1,0 +1,1 @@
+ALTER TABLE "session" ADD COLUMN "location" text DEFAULT 'Unknown Location';

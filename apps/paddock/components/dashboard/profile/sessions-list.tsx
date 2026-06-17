@@ -22,6 +22,7 @@ type Session = {
   token: string;
   userAgent?: string | null;
   ipAddress?: string | null;
+  location?: string | null;
   createdAt: Date;
   expiresAt: Date;
 };
@@ -157,10 +158,10 @@ export function SessionsList({
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                    {session.ipAddress && (
+                    {session.location && (
                       <span className="flex items-center gap-1">
                         <GlobeIcon className="size-3" />
-                        {session.ipAddress}
+                        {session.location}
                       </span>
                     )}
                     <span className="flex items-center gap-1">

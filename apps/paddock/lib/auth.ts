@@ -5,6 +5,7 @@ import { nextCookies } from "better-auth/next-js";
 import { db, schema } from "@/lib/db";
 import { cache } from "react";
 import { env } from "@/lib/env";
+import { getLocationFromIP } from "@/lib/ip-location";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -30,6 +31,34 @@ export const auth = betterAuth({
       enabled: true,
     },
   },
+  session: {
+    additionalFields: {
+      location: {
+        type: "string",
+        required: false,
+        defaultValue: "Unknown Location",
+        input: false
+      }
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (user) => {
+          let loc = "Unknown Location";
+          if (user.ipAddress) {
+            loc = await getLocationFromIP(user.ipAddress);
+          }
+          return {
+            data: {
+              ...user,
+              location: loc
+            }
+          }
+        }
+      }
+    }
+  }
 });
 
 export const getSession = cache(auth.api.getSession)

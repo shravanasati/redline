@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { getSession } from "@/lib/auth";
 import { fetchMonitorsByUser } from "@/lib/actions/monitors";
-import Unauthorized from "@/components/unauthorized";
+import Unauthenticated from "@/components/unauthorized";
 import { MonitorsPageHeader } from "@/components/dashboard/monitors/monitors-page-header";
 import { MonitorsKpiCards } from "@/components/dashboard/monitors/monitors-kpi-cards";
 import { MonitorsTableCard } from "@/components/dashboard/monitors/monitors-table-card";
@@ -9,7 +9,7 @@ import { MonitorsTableCard } from "@/components/dashboard/monitors/monitors-tabl
 export default async function MonitorsPage() {
   const session = await getSession({ headers: await headers() });
   if (!session?.user?.id) {
-    return <Unauthorized />;
+    return <Unauthenticated />;
   }
 
   const result = await fetchMonitorsByUser(session.user.id);

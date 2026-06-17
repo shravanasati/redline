@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { auth, getSession } from "@/lib/auth";
 import { ProfileHeader } from "@/components/dashboard/profile/profile-header";
 import { SessionsList } from "@/components/dashboard/profile/sessions-list";
+import Unauthenticated from "@/components/unauthorized";
 
 export const metadata = {
   title: "Profile",
@@ -15,7 +16,7 @@ export default async function ProfilePage() {
   const session = await getSession({ headers: reqHeaders });
 
   if (!session) {
-    redirect("/login");
+    return <Unauthenticated />;
   }
 
   const sessionsResponse = await auth.api.listSessions({
@@ -52,6 +53,7 @@ export default async function ProfilePage() {
               token: s.token,
               userAgent: s.userAgent,
               ipAddress: s.ipAddress,
+              location: s.location,
               createdAt: new Date(s.createdAt),
               expiresAt: new Date(s.expiresAt),
             }))}

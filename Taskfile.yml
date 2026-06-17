@@ -28,6 +28,6 @@ tasks:
   migrate:
     dir: apps/paddock
     cmds:
-      - pnpm dlx auth@latest generate
+      - pnpm dlx auth@latest generate --output ./lib/db/schema/auth-schema.ts
       - pnpm drizzle-kit generate
       - pnpm drizzle-kit migrate

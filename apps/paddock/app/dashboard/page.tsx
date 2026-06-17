@@ -1,7 +1,7 @@
 import data from "./data.json"
 import { getSession } from "@/lib/auth"
 import { headers } from "next/headers"
-import Unauthorized from "@/components/unauthorized"
+import Unauthenticated from "@/components/unauthorized"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { DataTable } from "@/components/data-table"
 import { SectionCards } from "@/components/section-cards"
@@ -9,7 +9,7 @@ import { SectionCards } from "@/components/section-cards"
 export default async function Dashboard() {
   const session = await getSession({ headers: await headers() })
   if (!session?.user.id) {
-    return <Unauthorized />
+    return <Unauthenticated />
   }
   return (
     <div className="flex flex-1 flex-col">
