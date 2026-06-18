@@ -16,8 +16,25 @@ services:
     networks:
       - app-network
 
+  nats:
+    image: nats:2.14-alpine
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["-js", "-sd", "/data"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - nats_data:/data
+    networks:
+      - app-network
+
 volumes:
   postgres_data:
+  nats_data:
 
 networks:
   app-network:
