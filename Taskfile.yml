@@ -29,9 +29,22 @@ tasks:
     cmds:
       - docker compose exec postgres psql -U postgres -d redline
 
-  migrate:
+  db-generate:
     dir: apps/paddock
     cmds:
       - pnpm dlx auth@latest generate --output ./lib/db/schema/auth-schema.ts
       - pnpm drizzle-kit generate
+
+  db-migrate:
+    dir: apps/paddock
+    cmds:
       - pnpm drizzle-kit migrate
+
+  grid-worker:
+    dir: services/grid-worker
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    cmds:
+      - go run .
