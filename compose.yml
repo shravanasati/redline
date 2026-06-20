@@ -21,7 +21,9 @@ services:
     ports:
       - "4222:4222"
       - "8222:8222"
-    command: ["-js", "-sd", "/data"]
+    env_file:
+      - .env
+    command: ["-c", "/etc/nats/nats.conf"]
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
       interval: 5s
@@ -29,6 +31,7 @@ services:
       retries: 5
     volumes:
       - nats_data:/data
+      - ./config/nats/nats.conf:/etc/nats/nats.conf:ro
     networks:
       - app-network
 
