@@ -40,6 +40,7 @@ export const auth = betterAuth({
         input: false,
       },
     },
+    freshAge: 0,
   },
   databaseHooks: {
     session: {
