@@ -124,6 +124,42 @@ func (c *NATSConnector) Publish(ctx context.Context, subject string, data []byte
 	return ack, nil
 }
 
+// PublishMsg synchronously publishes a pre-built *nats.Msg through the
+// JetStream context. Use this when you need to set message headers — most
+// commonly the Nats-TTL header for per-message expiry on streams that have
+// AllowMsgTTL enabled:
+//
+//	msg := nats.NewMsg("tasks.apac-south")
+//	msg.Data = data
+//	msg.Header.Set("Nats-TTL", "54s") // expire after 54 s if not consumed
+//	connector.PublishMsg(ctx, msg)
+func (c *NATSConnector) PublishMsg(ctx context.Context, msg *nats.Msg) (*jetstream.PubAck, error) {
+	ack, err := c.js.PublishMsg(ctx, msg)
+	if err != nil {
+		return nil, fmt.Errorf("js publish msg to %q: %w", msg.Subject, err)
+	}
+	return ack, nil
+}
+
+// PublishMsgAsync submits a pre-built *nats.Msg for async JetStream publish and
+// returns a PubAckFuture. Call PublishAsyncComplete() to block until all
+// outstanding futures have been acknowledged by the server, then inspect each
+// future's Ok() / Err() channels for individual results.
+func (c *NATSConnector) PublishMsgAsync(msg *nats.Msg) (jetstream.PubAckFuture, error) {
+	f, err := c.js.PublishMsgAsync(msg)
+	if err != nil {
+		return nil, fmt.Errorf("js publish async to %q: %w", msg.Subject, err)
+	}
+	return f, nil
+}
+
+// PublishAsyncComplete returns a channel that is closed once all outstanding
+// async publish futures have received a server ack (or errored).
+func (c *NATSConnector) PublishAsyncComplete() <-chan struct{} {
+	return c.js.PublishAsyncComplete()
+}
+
+
 // JS returns the underlying jetstream.JetStream for operations not covered by
 // the NATSConnector helpers.
 func (c *NATSConnector) JS() jetstream.JetStream { return c.js }

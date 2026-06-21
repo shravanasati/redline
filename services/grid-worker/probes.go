@@ -251,8 +251,6 @@ func executeProbe(logger *slog.Logger, task *tasks.MonitorTask) *tasks.MonitorTa
 		return result
 	}
 
-	logger.Info("executing probe", "task_id", task.GetId(), "type", task.GetType())
-
 	switch task.GetType() {
 	case tasks.TaskType_TASK_TYPE_DNS:
 		return probeDNS(task)
