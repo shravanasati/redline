@@ -1,8 +1,11 @@
 edition = "2024";
 
+package tasks;
 option go_package = "github.com/shravanasati/redline/services/shared/pb/tasks";
 
-package tasks;
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
 
 enum TaskType {
     TASK_TYPE_UNSPECIFIED = 0;
@@ -37,10 +40,17 @@ message MonitorTask {
     TaskType type = 2;
     string endpoint = 3;
     int32 timeout = 4;
-    MonitorAssertion assertions = 5;
+    repeated MonitorAssertion assertions = 5;
     MonitorMetadata metadata = 6;
 }
 
-// message MonitorTaskResult {
+message MonitorTaskResult {
+    string id = 1;
+    bool success = 3;
+    string error_message = 5;
+    int32 http_status_code = 6 [features.field_presence = IMPLICIT];
+    string worker_region = 7;
 
-// }
+    google.protobuf.Timestamp timestamp = 4;
+    google.protobuf.Duration latency = 2;
+}

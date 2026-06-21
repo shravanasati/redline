@@ -9,6 +9,8 @@ package tasks
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -394,7 +396,7 @@ type MonitorTask struct {
 	xxx_hidden_Type        TaskType               `protobuf:"varint,2,opt,name=type,enum=tasks.TaskType"`
 	xxx_hidden_Endpoint    *string                `protobuf:"bytes,3,opt,name=endpoint"`
 	xxx_hidden_Timeout     int32                  `protobuf:"varint,4,opt,name=timeout"`
-	xxx_hidden_Assertions  *MonitorAssertion      `protobuf:"bytes,5,opt,name=assertions"`
+	xxx_hidden_Assertions  *[]*MonitorAssertion   `protobuf:"bytes,5,rep,name=assertions"`
 	xxx_hidden_Metadata    *MonitorMetadata       `protobuf:"bytes,6,opt,name=metadata"`
 	XXX_raceDetectHookData protoimpl.RaceDetectHookData
 	XXX_presence           [1]uint32
@@ -463,9 +465,11 @@ func (x *MonitorTask) GetTimeout() int32 {
 	return 0
 }
 
-func (x *MonitorTask) GetAssertions() *MonitorAssertion {
+func (x *MonitorTask) GetAssertions() []*MonitorAssertion {
 	if x != nil {
-		return x.xxx_hidden_Assertions
+		if x.xxx_hidden_Assertions != nil {
+			return *x.xxx_hidden_Assertions
+		}
 	}
 	return nil
 }
@@ -497,8 +501,8 @@ func (x *MonitorTask) SetTimeout(v int32) {
 	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 3, 6)
 }
 
-func (x *MonitorTask) SetAssertions(v *MonitorAssertion) {
-	x.xxx_hidden_Assertions = v
+func (x *MonitorTask) SetAssertions(v []*MonitorAssertion) {
+	x.xxx_hidden_Assertions = &v
 }
 
 func (x *MonitorTask) SetMetadata(v *MonitorMetadata) {
@@ -533,13 +537,6 @@ func (x *MonitorTask) HasTimeout() bool {
 	return protoimpl.X.Present(&(x.XXX_presence[0]), 3)
 }
 
-func (x *MonitorTask) HasAssertions() bool {
-	if x == nil {
-		return false
-	}
-	return x.xxx_hidden_Assertions != nil
-}
-
 func (x *MonitorTask) HasMetadata() bool {
 	if x == nil {
 		return false
@@ -567,10 +564,6 @@ func (x *MonitorTask) ClearTimeout() {
 	x.xxx_hidden_Timeout = 0
 }
 
-func (x *MonitorTask) ClearAssertions() {
-	x.xxx_hidden_Assertions = nil
-}
-
 func (x *MonitorTask) ClearMetadata() {
 	x.xxx_hidden_Metadata = nil
 }
@@ -582,7 +575,7 @@ type MonitorTask_builder struct {
 	Type       *TaskType
 	Endpoint   *string
 	Timeout    *int32
-	Assertions *MonitorAssertion
+	Assertions []*MonitorAssertion
 	Metadata   *MonitorMetadata
 }
 
@@ -606,8 +599,246 @@ func (b0 MonitorTask_builder) Build() *MonitorTask {
 		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 3, 6)
 		x.xxx_hidden_Timeout = *b.Timeout
 	}
-	x.xxx_hidden_Assertions = b.Assertions
+	x.xxx_hidden_Assertions = &b.Assertions
 	x.xxx_hidden_Metadata = b.Metadata
+	return m0
+}
+
+type MonitorTaskResult struct {
+	state                     protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Id             *string                `protobuf:"bytes,1,opt,name=id"`
+	xxx_hidden_Success        bool                   `protobuf:"varint,3,opt,name=success"`
+	xxx_hidden_ErrorMessage   *string                `protobuf:"bytes,5,opt,name=error_message,json=errorMessage"`
+	xxx_hidden_HttpStatusCode int32                  `protobuf:"varint,6,opt,name=http_status_code,json=httpStatusCode"`
+	xxx_hidden_WorkerRegion   *string                `protobuf:"bytes,7,opt,name=worker_region,json=workerRegion"`
+	xxx_hidden_Timestamp      *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=timestamp"`
+	xxx_hidden_Latency        *durationpb.Duration   `protobuf:"bytes,2,opt,name=latency"`
+	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
+	XXX_presence              [1]uint32
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *MonitorTaskResult) Reset() {
+	*x = MonitorTaskResult{}
+	mi := &file_tasks_tasks_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MonitorTaskResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MonitorTaskResult) ProtoMessage() {}
+
+func (x *MonitorTaskResult) ProtoReflect() protoreflect.Message {
+	mi := &file_tasks_tasks_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *MonitorTaskResult) GetId() string {
+	if x != nil {
+		if x.xxx_hidden_Id != nil {
+			return *x.xxx_hidden_Id
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MonitorTaskResult) GetSuccess() bool {
+	if x != nil {
+		return x.xxx_hidden_Success
+	}
+	return false
+}
+
+func (x *MonitorTaskResult) GetErrorMessage() string {
+	if x != nil {
+		if x.xxx_hidden_ErrorMessage != nil {
+			return *x.xxx_hidden_ErrorMessage
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MonitorTaskResult) GetHttpStatusCode() int32 {
+	if x != nil {
+		return x.xxx_hidden_HttpStatusCode
+	}
+	return 0
+}
+
+func (x *MonitorTaskResult) GetWorkerRegion() string {
+	if x != nil {
+		if x.xxx_hidden_WorkerRegion != nil {
+			return *x.xxx_hidden_WorkerRegion
+		}
+		return ""
+	}
+	return ""
+}
+
+func (x *MonitorTaskResult) GetTimestamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.xxx_hidden_Timestamp
+	}
+	return nil
+}
+
+func (x *MonitorTaskResult) GetLatency() *durationpb.Duration {
+	if x != nil {
+		return x.xxx_hidden_Latency
+	}
+	return nil
+}
+
+func (x *MonitorTaskResult) SetId(v string) {
+	x.xxx_hidden_Id = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 0, 7)
+}
+
+func (x *MonitorTaskResult) SetSuccess(v bool) {
+	x.xxx_hidden_Success = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 7)
+}
+
+func (x *MonitorTaskResult) SetErrorMessage(v string) {
+	x.xxx_hidden_ErrorMessage = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 7)
+}
+
+func (x *MonitorTaskResult) SetHttpStatusCode(v int32) {
+	x.xxx_hidden_HttpStatusCode = v
+}
+
+func (x *MonitorTaskResult) SetWorkerRegion(v string) {
+	x.xxx_hidden_WorkerRegion = &v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 4, 7)
+}
+
+func (x *MonitorTaskResult) SetTimestamp(v *timestamppb.Timestamp) {
+	x.xxx_hidden_Timestamp = v
+}
+
+func (x *MonitorTaskResult) SetLatency(v *durationpb.Duration) {
+	x.xxx_hidden_Latency = v
+}
+
+func (x *MonitorTaskResult) HasId() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 0)
+}
+
+func (x *MonitorTaskResult) HasSuccess() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *MonitorTaskResult) HasErrorMessage() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *MonitorTaskResult) HasWorkerRegion() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 4)
+}
+
+func (x *MonitorTaskResult) HasTimestamp() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Timestamp != nil
+}
+
+func (x *MonitorTaskResult) HasLatency() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_Latency != nil
+}
+
+func (x *MonitorTaskResult) ClearId() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 0)
+	x.xxx_hidden_Id = nil
+}
+
+func (x *MonitorTaskResult) ClearSuccess() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_Success = false
+}
+
+func (x *MonitorTaskResult) ClearErrorMessage() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_ErrorMessage = nil
+}
+
+func (x *MonitorTaskResult) ClearWorkerRegion() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 4)
+	x.xxx_hidden_WorkerRegion = nil
+}
+
+func (x *MonitorTaskResult) ClearTimestamp() {
+	x.xxx_hidden_Timestamp = nil
+}
+
+func (x *MonitorTaskResult) ClearLatency() {
+	x.xxx_hidden_Latency = nil
+}
+
+type MonitorTaskResult_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Id             *string
+	Success        *bool
+	ErrorMessage   *string
+	HttpStatusCode int32
+	WorkerRegion   *string
+	Timestamp      *timestamppb.Timestamp
+	Latency        *durationpb.Duration
+}
+
+func (b0 MonitorTaskResult_builder) Build() *MonitorTaskResult {
+	m0 := &MonitorTaskResult{}
+	b, x := &b0, m0
+	_, _ = b, x
+	if b.Id != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 0, 7)
+		x.xxx_hidden_Id = b.Id
+	}
+	if b.Success != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 7)
+		x.xxx_hidden_Success = *b.Success
+	}
+	if b.ErrorMessage != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 7)
+		x.xxx_hidden_ErrorMessage = b.ErrorMessage
+	}
+	x.xxx_hidden_HttpStatusCode = b.HttpStatusCode
+	if b.WorkerRegion != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 4, 7)
+		x.xxx_hidden_WorkerRegion = b.WorkerRegion
+	}
+	x.xxx_hidden_Timestamp = b.Timestamp
+	x.xxx_hidden_Latency = b.Latency
 	return m0
 }
 
@@ -615,7 +846,7 @@ var File_tasks_tasks_proto protoreflect.FileDescriptor
 
 const file_tasks_tasks_proto_rawDesc = "" +
 	"\n" +
-	"\x11tasks/tasks.proto\x12\x05tasks\"\\\n" +
+	"\x11tasks/tasks.proto\x12\x05tasks\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\"\\\n" +
 	"\x10MonitorAssertion\x12\x16\n" +
 	"\x06target\x18\x01 \x01(\tR\x06target\x12\x1a\n" +
 	"\boperator\x18\x02 \x01(\tR\boperator\x12\x14\n" +
@@ -633,9 +864,17 @@ const file_tasks_tasks_proto_rawDesc = "" +
 	"\bendpoint\x18\x03 \x01(\tR\bendpoint\x12\x18\n" +
 	"\atimeout\x18\x04 \x01(\x05R\atimeout\x127\n" +
 	"\n" +
-	"assertions\x18\x05 \x01(\v2\x17.tasks.MonitorAssertionR\n" +
+	"assertions\x18\x05 \x03(\v2\x17.tasks.MonitorAssertionR\n" +
 	"assertions\x122\n" +
-	"\bmetadata\x18\x06 \x01(\v2\x16.tasks.MonitorMetadataR\bmetadata*\x88\x01\n" +
+	"\bmetadata\x18\x06 \x01(\v2\x16.tasks.MonitorMetadataR\bmetadata\"\xa7\x02\n" +
+	"\x11MonitorTaskResult\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
+	"\asuccess\x18\x03 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x05 \x01(\tR\ferrorMessage\x12/\n" +
+	"\x10http_status_code\x18\x06 \x01(\x05B\x05\xaa\x01\x02\b\x02R\x0ehttpStatusCode\x12#\n" +
+	"\rworker_region\x18\a \x01(\tR\fworkerRegion\x128\n" +
+	"\ttimestamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x123\n" +
+	"\alatency\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\alatency*\x88\x01\n" +
 	"\bTaskType\x12\x19\n" +
 	"\x15TASK_TYPE_UNSPECIFIED\x10\x00\x12\x12\n" +
 	"\x0eTASK_TYPE_ICMP\x10\x01\x12\x12\n" +
@@ -653,26 +892,31 @@ const file_tasks_tasks_proto_rawDesc = "" +
 	"TasksProtoP\x01Z8github.com/shravanasati/redline/services/shared/pb/tasks\xa2\x02\x03TXX\xaa\x02\x05Tasks\xca\x02\x05Tasks\xe2\x02\x11Tasks\\GPBMetadata\xea\x02\x05Tasksb\beditionsp\xe9\a"
 
 var file_tasks_tasks_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_tasks_tasks_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_tasks_tasks_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_tasks_tasks_proto_goTypes = []any{
-	(TaskType)(0),            // 0: tasks.TaskType
-	(HTTPMethod)(0),          // 1: tasks.HTTPMethod
-	(*MonitorAssertion)(nil), // 2: tasks.MonitorAssertion
-	(*MonitorMetadata)(nil),  // 3: tasks.MonitorMetadata
-	(*MonitorTask)(nil),      // 4: tasks.MonitorTask
-	nil,                      // 5: tasks.MonitorMetadata.HeadersEntry
+	(TaskType)(0),                 // 0: tasks.TaskType
+	(HTTPMethod)(0),               // 1: tasks.HTTPMethod
+	(*MonitorAssertion)(nil),      // 2: tasks.MonitorAssertion
+	(*MonitorMetadata)(nil),       // 3: tasks.MonitorMetadata
+	(*MonitorTask)(nil),           // 4: tasks.MonitorTask
+	(*MonitorTaskResult)(nil),     // 5: tasks.MonitorTaskResult
+	nil,                           // 6: tasks.MonitorMetadata.HeadersEntry
+	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),   // 8: google.protobuf.Duration
 }
 var file_tasks_tasks_proto_depIdxs = []int32{
-	5, // 0: tasks.MonitorMetadata.headers:type_name -> tasks.MonitorMetadata.HeadersEntry
+	6, // 0: tasks.MonitorMetadata.headers:type_name -> tasks.MonitorMetadata.HeadersEntry
 	1, // 1: tasks.MonitorMetadata.method:type_name -> tasks.HTTPMethod
 	0, // 2: tasks.MonitorTask.type:type_name -> tasks.TaskType
 	2, // 3: tasks.MonitorTask.assertions:type_name -> tasks.MonitorAssertion
 	3, // 4: tasks.MonitorTask.metadata:type_name -> tasks.MonitorMetadata
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	7, // 5: tasks.MonitorTaskResult.timestamp:type_name -> google.protobuf.Timestamp
+	8, // 6: tasks.MonitorTaskResult.latency:type_name -> google.protobuf.Duration
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_tasks_tasks_proto_init() }
@@ -686,7 +930,7 @@ func file_tasks_tasks_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tasks_tasks_proto_rawDesc), len(file_tasks_tasks_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
