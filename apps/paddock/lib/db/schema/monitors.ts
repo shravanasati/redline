@@ -97,7 +97,7 @@ export const monitors = pgTable(
       ),
       timeoutCheck: check(
         "check_timeout",
-        sql`${table.timeout} > 0 AND ${table.timeout} <= ${table.frequency}`,
+        sql`${table.timeout} > 0 AND ${table.timeout} <= 30`,
       ),
     };
   },
