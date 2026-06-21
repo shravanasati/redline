@@ -48,3 +48,8 @@ tasks:
       - go.sum
     cmds:
       - go run .
+
+  pb-gen:
+    cmds:
+      - buf build
+      - buf generate

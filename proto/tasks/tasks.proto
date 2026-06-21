@@ -1,0 +1,46 @@
+edition = "2024";
+
+option go_package = "github.com/shravanasati/redline/services/shared/pb/tasks";
+
+package tasks;
+
+enum TaskType {
+    TASK_TYPE_UNSPECIFIED = 0;
+    TASK_TYPE_ICMP = 1;
+    TASK_TYPE_HTTP = 2;
+    TASK_TYPE_HTTPS = 3;
+    TASK_TYPE_TCP = 4;
+    TASK_TYPE_DNS = 5;
+}
+
+message MonitorAssertion {
+    string target = 1;
+    string operator = 2;
+    string value = 3;
+}
+
+enum HTTPMethod {
+    HTTP_METHOD_UNSPECIFIED = 0;
+    HTTP_METHOD_GET  = 1;
+    HTTP_METHOD_POST = 2;
+    HTTP_METHOD_HEAD = 3;
+}
+
+message MonitorMetadata {
+    map<string, string> headers = 1;
+    HTTPMethod method = 2;
+    string body = 3;
+}
+
+message MonitorTask {
+    string id = 1;
+    TaskType type = 2;
+    string endpoint = 3;
+    int32 timeout = 4;
+    MonitorAssertion assertions = 5;
+    MonitorMetadata metadata = 6;
+}
+
+// message MonitorTaskResult {
+
+// }
