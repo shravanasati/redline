@@ -24,8 +24,8 @@ const (
 	tasksStream       = "TASKS"
 	resultsStream     = "RESULTS"
 	defaultWorkerPool = 8
-	fetchMaxWait      = 5 * time.Second
-	fetchHeartbeat    = 1 * time.Second // must be < fetchMaxWait/2
+	fetchMaxWait      = 10 * time.Second
+	fetchHeartbeat    = 3 * time.Second // must be < fetchMaxWait/2
 )
 
 // workerConfig holds all runtime configuration for the grid-worker.
@@ -248,7 +248,12 @@ func processTask(
 
 	logger.Info("executing probe", "task_id", task.GetId(), "type", task.GetType())
 
-	result := executeProbe(logger, &task)
+	result, err := executeProbe(&task)
+	if err != nil {
+		logger.Error("task validation failed; terminating message", "task_id", task.GetId(), "err", err)
+		_ = msg.Term()
+		return
+	}
 
 	resultBytes, err := proto.Marshal(result)
 	if err != nil {

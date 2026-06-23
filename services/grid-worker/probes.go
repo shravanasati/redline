@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"log/slog"
+	"io"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/shravanasati/redline/services/shared/netutil"
 	"github.com/shravanasati/redline/services/shared/pb/tasks"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -33,6 +35,53 @@ func newSuccessResult(id string, latency time.Duration) *tasks.MonitorTaskResult
 		Timestamp: timestamppb.Now(),
 		Latency:   durationpb.New(latency),
 	}.Build()
+}
+
+// checkAssertions evaluates each assertion against the probe result data.
+// statusCode is the HTTP status code (0 for non-HTTP probes).
+// body is the HTTP response body (empty for non-HTTP probes).
+// latency is the probe round-trip duration.
+// It returns a non-empty error message describing the first failed assertion,
+// or an empty string if all assertions pass.
+func checkAssertions(assertions []*tasks.MonitorAssertion, statusCode int, body string, latency time.Duration) string {
+	for _, a := range assertions {
+		target := a.GetTarget()
+		operator := a.GetOperator()
+		value := a.GetValue()
+
+		switch target {
+		case "status_code":
+			expected, err := strconv.Atoi(value)
+			if err != nil {
+				return fmt.Sprintf("assertion error: invalid status_code value %q: %v", value, err)
+			}
+			if operator == "equals" && statusCode != expected {
+				return fmt.Sprintf("assertion failed: status_code %d does not equal %d", statusCode, expected)
+			}
+
+		case "body":
+			switch operator {
+			case "equals":
+				if body != value {
+					return fmt.Sprintf("assertion failed: body does not equal %q", value)
+				}
+			case "contains":
+				if !strings.Contains(body, value) {
+					return fmt.Sprintf("assertion failed: body does not contain %q", value)
+				}
+			}
+
+		case "response_time":
+			threshold, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return fmt.Sprintf("assertion error: invalid response_time value %q: %v", value, err)
+			}
+			if operator == "less_than" && latency.Milliseconds() >= int64(threshold) {
+				return fmt.Sprintf("assertion failed: response_time %dms is not less than %.0fms", latency.Milliseconds(), threshold)
+			}
+		}
+	}
+	return ""
 }
 
 // probeDNS resolves the endpoint as a hostname and measures the latency.
@@ -66,6 +115,10 @@ func probeDNS(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 	if len(addrs) == 0 {
 		msg := fmt.Sprintf("dns lookup returned no addresses for %q", host)
 		return newFailResult(id, msg, latency)
+	}
+
+	if assertErr := checkAssertions(task.GetAssertions(), 0, "", latency); assertErr != "" {
+		return newFailResult(id, assertErr, latency)
 	}
 
 	return newSuccessResult(id, latency)
@@ -147,6 +200,31 @@ func probeHTTPOrHTTPS(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 	statusCode := int32(resp.StatusCode)
 	success := resp.StatusCode >= 200 && resp.StatusCode < 400
 
+	var errMsg string
+	if !success {
+		errMsg = fmt.Sprintf("unexpected HTTP status: %s", resp.Status)
+	}
+
+	// Read the body only if there are body assertions to evaluate.
+	var bodyStr string
+	assertions := task.GetAssertions()
+	for _, a := range assertions {
+		if a.GetTarget() == "body" {
+			data, readErr := io.ReadAll(resp.Body)
+			if readErr == nil {
+				bodyStr = string(data)
+			}
+			break
+		}
+	}
+
+	if success {
+		if assertErr := checkAssertions(assertions, int(statusCode), bodyStr, latency); assertErr != "" {
+			success = false
+			errMsg = assertErr
+		}
+	}
+
 	result := tasks.MonitorTaskResult_builder{
 		Id:             &id,
 		Success:        &success,
@@ -155,9 +233,8 @@ func probeHTTPOrHTTPS(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 		Latency:        durationpb.New(latency),
 	}
 
-	if !success {
-		msg := fmt.Sprintf("unexpected HTTP status: %s", resp.Status)
-		result.ErrorMessage = &msg
+	if errMsg != "" {
+		result.ErrorMessage = &errMsg
 	}
 
 	return result.Build()
@@ -194,6 +271,10 @@ func probeICMP(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 	}
 	conn.Close()
 
+	if assertErr := checkAssertions(task.GetAssertions(), 0, "", latency); assertErr != "" {
+		return newFailResult(id, assertErr, latency)
+	}
+
 	return newSuccessResult(id, latency)
 }
 
@@ -217,6 +298,10 @@ func probeTCP(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 	}
 	conn.Close()
 
+	if assertErr := checkAssertions(task.GetAssertions(), 0, "", latency); assertErr != "" {
+		return newFailResult(id, assertErr, latency)
+	}
+
 	return newSuccessResult(id, latency)
 }
 
@@ -226,42 +311,43 @@ const (
 )
 
 // validateTask checks that the task fields are within acceptable bounds.
-// It returns a non-nil *tasks.MonitorTaskResult only when validation fails.
-func validateTask(logger *slog.Logger, task *tasks.MonitorTask) *tasks.MonitorTaskResult {
+// It returns an error if validation fails.
+func validateTask(task *tasks.MonitorTask) error {
 	timeoutSecs := task.GetTimeout()
 	if timeoutSecs < minTimeoutSecs || timeoutSecs > maxTimeoutSecs {
-		id := task.GetId()
-		msg := fmt.Sprintf(
-			"invalid timeout %ds: must be between %d and %ds",
-			timeoutSecs, minTimeoutSecs, maxTimeoutSecs,
-		)
-		logger.Warn("task validation failed", "task_id", id, "timeout_secs", timeoutSecs)
-		return newFailResult(id, msg, 0)
+		return fmt.Errorf("invalid timeout %ds: must be between %d and %ds", timeoutSecs, minTimeoutSecs, maxTimeoutSecs)
 	}
+
+	endpoint := task.GetEndpoint()
+	isPrivate, err := netutil.IsPrivateOrLocalEndpoint(endpoint)
+	if err != nil {
+		return fmt.Errorf("invalid endpoint %q: %w", endpoint, err)
+	}
+	if isPrivate {
+		return fmt.Errorf("endpoint %q is within private IP range or localhost", endpoint)
+	}
+
 	return nil
 }
 
 // executeProbe validates the task and then dispatches to the appropriate probe function.
-func executeProbe(logger *slog.Logger, task *tasks.MonitorTask) *tasks.MonitorTaskResult {
-	if result := validateTask(logger, task); result != nil {
-		return result
+func executeProbe(task *tasks.MonitorTask) (*tasks.MonitorTaskResult, error) {
+	if err := validateTask(task); err != nil {
+		return nil, err
 	}
 
 	switch task.GetType() {
 	case tasks.TaskType_TASK_TYPE_DNS:
-		return probeDNS(task)
+		return probeDNS(task), nil
 	case tasks.TaskType_TASK_TYPE_HTTP:
-		return probeHTTP(task)
+		return probeHTTP(task), nil
 	case tasks.TaskType_TASK_TYPE_HTTPS:
-		return probeHTTPS(task)
+		return probeHTTPS(task), nil
 	case tasks.TaskType_TASK_TYPE_ICMP:
-		return probeICMP(task)
+		return probeICMP(task), nil
 	case tasks.TaskType_TASK_TYPE_TCP:
-		return probeTCP(task)
+		return probeTCP(task), nil
 	default:
-		id := task.GetId()
-		msg := fmt.Sprintf("unknown task type: %v", task.GetType())
-		logger.Error("unknown task type", "task_id", id, "type", task.GetType())
-		return newFailResult(id, msg, 0)
+		return nil, fmt.Errorf("unknown task type: %v", task.GetType())
 	}
 }
