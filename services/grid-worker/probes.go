@@ -35,7 +35,6 @@ func newSuccessResult(id string, latency time.Duration) *tasks.MonitorTaskResult
 	}.Build()
 }
 
-
 // probeDNS resolves the endpoint as a hostname and measures the latency.
 func probeDNS(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 	id := task.GetId()
@@ -71,7 +70,6 @@ func probeDNS(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 
 	return newSuccessResult(id, latency)
 }
-
 
 // probeHTTP performs an HTTP request and measures latency.
 func probeHTTP(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
@@ -222,7 +220,6 @@ func probeTCP(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 	return newSuccessResult(id, latency)
 }
 
-
 const (
 	minTimeoutSecs int32 = 0
 	maxTimeoutSecs int32 = 30 // 30 seconds
@@ -243,7 +240,6 @@ func validateTask(logger *slog.Logger, task *tasks.MonitorTask) *tasks.MonitorTa
 	}
 	return nil
 }
-
 
 // executeProbe validates the task and then dispatches to the appropriate probe function.
 func executeProbe(logger *slog.Logger, task *tasks.MonitorTask) *tasks.MonitorTaskResult {

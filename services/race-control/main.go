@@ -29,55 +29,55 @@ var sampleTasks = []struct {
 }{
 	// DNS
 	{"apac-south", tasks.MonitorTask_builder{
-		Id: ptr("dns-google"), Type: tasks.TaskType_TASK_TYPE_DNS.Enum(),
-		Endpoint: ptr("dns.google"), Timeout: ptr(int32(5)),
+		Id: new("dns-google"), Type: tasks.TaskType_TASK_TYPE_DNS.Enum(),
+		Endpoint: new("dns.google"), Timeout: new(int32(5)),
 	}},
 	{"apac-south", tasks.MonitorTask_builder{
-		Id: ptr("dns-cloudflare"), Type: tasks.TaskType_TASK_TYPE_DNS.Enum(),
-		Endpoint: ptr("one.one.one.one"), Timeout: ptr(int32(5)),
+		Id: new("dns-cloudflare"), Type: tasks.TaskType_TASK_TYPE_DNS.Enum(),
+		Endpoint: new("one.one.one.one"), Timeout: new(int32(5)),
 	}},
 
 	// HTTP
 	{"apac-south", tasks.MonitorTask_builder{
-		Id: ptr("http-example"), Type: tasks.TaskType_TASK_TYPE_HTTP.Enum(),
-		Endpoint: ptr("http://example.com"), Timeout: ptr(int32(10)),
+		Id: new("http-example"), Type: tasks.TaskType_TASK_TYPE_HTTP.Enum(),
+		Endpoint: new("http://example.com"), Timeout: new(int32(10)),
 	}},
 	{"apac-south", tasks.MonitorTask_builder{
-		Id: ptr("http-httpbin-post"), Type: tasks.TaskType_TASK_TYPE_HTTP.Enum(),
-		Endpoint: ptr("http://httpbin.org/post"), Timeout: ptr(int32(10)),
+		Id: new("http-httpbin-post"), Type: tasks.TaskType_TASK_TYPE_HTTP.Enum(),
+		Endpoint: new("http://httpbin.org/post"), Timeout: new(int32(10)),
 		Metadata: tasks.MonitorMetadata_builder{
-			Method: tasks.HTTPMethod_HTTP_METHOD_POST.Enum(),
-			Body:   ptr(`{"source":"race-control"}`),
+			Method:  tasks.HTTPMethod_HTTP_METHOD_POST.Enum(),
+			Body:    new(`{"source":"race-control"}`),
 			Headers: map[string]string{"Content-Type": "application/json"},
 		}.Build(),
 	}},
 
 	// HTTPS
 	{"apac-south", tasks.MonitorTask_builder{
-		Id: ptr("https-github"), Type: tasks.TaskType_TASK_TYPE_HTTPS.Enum(),
-		Endpoint: ptr("https://github.com"), Timeout: ptr(int32(10)),
+		Id: new("https-github"), Type: tasks.TaskType_TASK_TYPE_HTTPS.Enum(),
+		Endpoint: new("https://github.com"), Timeout: new(int32(10)),
 	}},
 	{"apac-south", tasks.MonitorTask_builder{
-		Id: ptr("https-google"), Type: tasks.TaskType_TASK_TYPE_HTTPS.Enum(),
-		Endpoint: ptr("https://www.google.com"), Timeout: ptr(int32(10)),
+		Id: new("https-google"), Type: tasks.TaskType_TASK_TYPE_HTTPS.Enum(),
+		Endpoint: new("https://www.google.com"), Timeout: new(int32(10)),
 	}},
 
 	// TCP
 	{"apac-south", tasks.MonitorTask_builder{
-		Id: ptr("tcp-cloudflare-dns"), Type: tasks.TaskType_TASK_TYPE_TCP.Enum(),
-		Endpoint: ptr("1.1.1.1:53"), Timeout: ptr(int32(5)),
+		Id: new("tcp-cloudflare-dns"), Type: tasks.TaskType_TASK_TYPE_TCP.Enum(),
+		Endpoint: new("1.1.1.1:53"), Timeout: new(int32(5)),
 	}},
 
 	// ICMP (TCP fallback)
 	{"apac-south", tasks.MonitorTask_builder{
-		Id: ptr("icmp-google"), Type: tasks.TaskType_TASK_TYPE_ICMP.Enum(),
-		Endpoint: ptr("google.com"), Timeout: ptr(int32(5)),
+		Id: new("icmp-google"), Type: tasks.TaskType_TASK_TYPE_ICMP.Enum(),
+		Endpoint: new("google.com"), Timeout: new(int32(5)),
 	}},
 
 	// Bad endpoint — exercises the failure path
 	{"apac-south", tasks.MonitorTask_builder{
-		Id: ptr("https-bad-host"), Type: tasks.TaskType_TASK_TYPE_HTTPS.Enum(),
-		Endpoint: ptr("https://this-host-does-not-exist.invalid"), Timeout: ptr(int32(5)),
+		Id: new("https-bad-host"), Type: tasks.TaskType_TASK_TYPE_HTTPS.Enum(),
+		Endpoint: new("https://this-host-does-not-exist.invalid"), Timeout: new(int32(5)),
 	}},
 }
 
@@ -103,7 +103,7 @@ func main() {
 		logger.Error("failed to connect to NATS", "err", err)
 		os.Exit(1)
 	}
-	defer connector.Drain() //nolint:errcheck
+	defer connector.Drain()
 
 	ctx := context.Background()
 
@@ -191,8 +191,6 @@ func main() {
 
 	logger.Info("done", "published", published, "subject", subject)
 }
-
-func ptr[T any](v T) *T { return &v }
 
 func envOr(key, fallback string) string {
 	if v, ok := os.LookupEnv(key); ok && v != "" {

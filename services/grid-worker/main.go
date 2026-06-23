@@ -21,11 +21,11 @@ import (
 )
 
 const (
-	tasksStream          = "TASKS"
-	resultsStream        = "RESULTS"
-	defaultWorkerPool    = 8
-	fetchMaxWait         = 5 * time.Second
-	fetchHeartbeat       = 1 * time.Second // must be < fetchMaxWait/2
+	tasksStream       = "TASKS"
+	resultsStream     = "RESULTS"
+	defaultWorkerPool = 8
+	fetchMaxWait      = 5 * time.Second
+	fetchHeartbeat    = 1 * time.Second // must be < fetchMaxWait/2
 )
 
 // workerConfig holds all runtime configuration for the grid-worker.
@@ -146,11 +146,11 @@ func main() {
 		Durable:       "worker-" + cfg.Region,
 		FilterSubject: "tasks." + cfg.Region,
 		// DeliverPolicy: jetstream.DeliverNewPolicy,
-		ReplayPolicy:  jetstream.ReplayInstantPolicy,
-		AckPolicy:     jetstream.AckExplicitPolicy,
-		AckWait:       30 * time.Second,
-		MaxDeliver:    5,
-		BackOff:       []time.Duration{5 * time.Second, 15 * time.Second, 30 * time.Second},
+		ReplayPolicy: jetstream.ReplayInstantPolicy,
+		AckPolicy:    jetstream.AckExplicitPolicy,
+		AckWait:      30 * time.Second,
+		MaxDeliver:   5,
+		BackOff:      []time.Duration{5 * time.Second, 15 * time.Second, 30 * time.Second},
 	})
 	if err != nil {
 		logger.Error("failed to ensure pull consumer", "err", err)

@@ -159,7 +159,6 @@ func (c *NATSConnector) PublishAsyncComplete() <-chan struct{} {
 	return c.js.PublishAsyncComplete()
 }
 
-
 // JS returns the underlying jetstream.JetStream for operations not covered by
 // the NATSConnector helpers.
 func (c *NATSConnector) JS() jetstream.JetStream { return c.js }
