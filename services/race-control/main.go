@@ -5,191 +5,30 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
+	"strings"
+	"sync"
+	"syscall"
 	"time"
+
+	pgxuuid "github.com/jackc/pgx-gofrs-uuid"
+	"github.com/jackc/pgx/v5"
 
 	natsgo "github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/shravanasati/redline/services/shared/env"
 	"github.com/shravanasati/redline/services/shared/logging"
 	"github.com/shravanasati/redline/services/shared/natsconn"
-	"github.com/shravanasati/redline/services/shared/pb/tasks"
-	"google.golang.org/protobuf/proto"
 )
 
-// taskTTL is the per-message expiry set via the Nats-TTL header. For test
-// publishes there is no real check frequency, so 5 minutes is used. In
-// production the dispatcher should derive this as ~90% of the check interval
-// so stale tasks are never executed if the queue backs up.
-const taskTTL = 5 * time.Minute
-
-// bad endpoint to exercise the failure path.
-var sampleTasks = []struct {
-	region string
-	task   tasks.MonitorTask_builder
-}{
-	// DNS
-	{"apac-south", tasks.MonitorTask_builder{
-		Id: new("dns-google"), Type: tasks.TaskType_TASK_TYPE_DNS.Enum(),
-		Endpoint: new("dns.google"), Timeout: new(int32(5)),
-	}},
-	{"apac-south", tasks.MonitorTask_builder{
-		Id: new("dns-cloudflare"), Type: tasks.TaskType_TASK_TYPE_DNS.Enum(),
-		Endpoint: new("one.one.one.one"), Timeout: new(int32(5)),
-	}},
-
-	// HTTP
-	{"apac-south", tasks.MonitorTask_builder{
-		Id: new("http-example"), Type: tasks.TaskType_TASK_TYPE_HTTP.Enum(),
-		Endpoint: new("http://example.com"), Timeout: new(int32(10)),
-	}},
-	{"apac-south", tasks.MonitorTask_builder{
-		Id: new("http-httpbin-post"), Type: tasks.TaskType_TASK_TYPE_HTTP.Enum(),
-		Endpoint: new("http://httpbin.org/post"), Timeout: new(int32(10)),
-		Metadata: tasks.MonitorMetadata_builder{
-			Method:  tasks.HTTPMethod_HTTP_METHOD_POST.Enum(),
-			Body:    new(`{"source":"race-control"}`),
-			Headers: map[string]string{"Content-Type": "application/json"},
-		}.Build(),
-	}},
-
-	// HTTPS
-	{"apac-south", tasks.MonitorTask_builder{
-		Id: new("https-github"), Type: tasks.TaskType_TASK_TYPE_HTTPS.Enum(),
-		Endpoint: new("https://github.com"), Timeout: new(int32(10)),
-	}},
-	{"apac-south", tasks.MonitorTask_builder{
-		Id: new("https-google"), Type: tasks.TaskType_TASK_TYPE_HTTPS.Enum(),
-		Endpoint: new("https://www.google.com"), Timeout: new(int32(10)),
-	}},
-
-	// TCP
-	{"apac-south", tasks.MonitorTask_builder{
-		Id: new("tcp-cloudflare-dns"), Type: tasks.TaskType_TASK_TYPE_TCP.Enum(),
-		Endpoint: new("1.1.1.1:53"), Timeout: new(int32(5)),
-	}},
-
-	// ICMP (TCP fallback)
-	{"apac-south", tasks.MonitorTask_builder{
-		Id: new("icmp-google"), Type: tasks.TaskType_TASK_TYPE_ICMP.Enum(),
-		Endpoint: new("google.com"), Timeout: new(int32(5)),
-	}},
-
-	// Bad endpoint — exercises the failure path
-	{"apac-south", tasks.MonitorTask_builder{
-		Id: new("https-bad-host"), Type: tasks.TaskType_TASK_TYPE_HTTPS.Enum(),
-		Endpoint: new("https://this-host-does-not-exist.invalid"), Timeout: new(int32(5)),
-	}},
-}
-
-func main() {
-	logger := logging.New(logging.Config{
-		Service: "race-control",
-		Level:   slog.LevelInfo,
-		Format:  logging.FormatText,
-	})
-
-	if err := env.Load(logger); err != nil {
-		logger.Error("failed to load .env", "err", err)
-		os.Exit(1)
-	}
-
-	connector, err := natsconn.New(logger, natsconn.Config{
-		URL:      envOr("NATS_URL", "nats://localhost:4222"),
-		Name:     "race-control",
-		Username: mustEnv(logger, "NATS_USER_DISPATCHER"),
-		Password: mustEnv(logger, "NATS_PASS_DISPATCHER"),
-	})
-	if err != nil {
-		logger.Error("failed to connect to NATS", "err", err)
-		os.Exit(1)
-	}
-	defer connector.Drain()
-
-	ctx := context.Background()
-
-	if _, err := connector.EnsureStream(ctx, jetstream.StreamConfig{
-		Name:        "TASKS",
-		Subjects:    []string{"tasks.>"},
-		Retention:   jetstream.WorkQueuePolicy,
-		Discard:     jetstream.DiscardOld,
-		AllowMsgTTL: true,
-		MaxAge:      time.Hour,
-		Storage:     jetstream.FileStorage,
-		Duplicates:  2 * time.Minute,
-	}); err != nil {
-		logger.Error("failed to ensure TASKS stream", "err", err)
-		os.Exit(1)
-	}
-
-	region := envOr("PUBLISH_REGION", "apac-south")
-	subject := "tasks." + region
-	published := 0
-
-	var futures []struct {
-		taskID string
-		future jetstream.PubAckFuture
-	}
-
-	for _, s := range sampleTasks {
-		if s.region != region {
-			continue
-		}
-		task := s.task.Build()
-		data, err := proto.Marshal(task)
-		if err != nil {
-			logger.Error("marshal failed", "task_id", task.GetId(), "err", err)
-			continue
-		}
-
-		// Set Nats-TTL so the server discards the message if it isn't consumed
-		// within taskTTL. Requires AllowMsgTTL: true on the TASKS stream.
-		msg := natsgo.NewMsg(subject)
-		msg.Data = data
-		msg.Header.Set("Nats-TTL", fmt.Sprintf("%.0fs", taskTTL.Seconds()))
-
-		future, err := connector.PublishMsgAsync(msg)
-		if err != nil {
-			logger.Error("async publish failed", "task_id", task.GetId(), "err", err)
-			continue
-		}
-
-		futures = append(futures, struct {
-			taskID string
-			future jetstream.PubAckFuture
-		}{
-			taskID: task.GetId(),
-			future: future,
-		})
-
-		logger.Info("submitted task async",
-			"task_id", task.GetId(),
-			"type", task.GetType(),
-			"endpoint", task.GetEndpoint(),
-		)
-		published++
-	}
-
-	logger.Info("all tasks submitted, waiting for server acks...", "count", published)
-
-	// Block until all outstanding async publications are acknowledged or errored.
-	select {
-	case <-connector.PublishAsyncComplete():
-		logger.Info("async publish check complete")
-	case <-time.After(10 * time.Second):
-		logger.Error("timeout waiting for server acks")
-	}
-
-	// Verify all individual publications succeeded
-	for _, f := range futures {
-		select {
-		case ack := <-f.future.Ok():
-			logger.Info("server acked task", "task_id", f.taskID, "stream", ack.Stream, "sequence", ack.Sequence)
-		case err := <-f.future.Err():
-			logger.Error("failed to publish task", "task_id", f.taskID, "err", err)
-		}
-	}
-
-	logger.Info("done", "published", published, "subject", subject)
+type dispatcherConfig struct {
+	NATSURL        string
+	NATSUsername   string
+	NatsPassword   string
+	PostgresURL    string
+	PublishRegions []string
 }
 
 func envOr(key, fallback string) string {
@@ -206,4 +45,150 @@ func mustEnv(logger *slog.Logger, key string) string {
 		os.Exit(1)
 	}
 	return v
+}
+
+func configFromEnv(logger *slog.Logger) (*dispatcherConfig, error) {
+	if err := env.Load(logger); err != nil {
+		logger.Error("failed to load .env", "err", err)
+		return nil, fmt.Errorf("failed to load .env: %v", err)
+	}
+
+	return &dispatcherConfig{
+		NATSURL:        envOr("NATS_URL", "nats://localhost:4222"),
+		NATSUsername:   mustEnv(logger, "NATS_USER_DISPATCHER"),
+		NatsPassword:   mustEnv(logger, "NATS_PASS_DISPATCHER"),
+		PostgresURL:    mustEnv(logger, "POSTGRES_URL"),
+		PublishRegions: strings.Split(mustEnv(logger, "PUBLISH_REGIONS"), ","),
+	}, nil
+}
+
+func main() {
+	logger := logging.New(logging.Config{
+		Service: "race-control",
+		Level:   slog.LevelInfo,
+		Format:  logging.FormatText,
+	})
+
+	config, err := configFromEnv(logger)
+	if err != nil {
+		logger.Error("failed to load config", "err", err)
+		os.Exit(1)
+	}
+
+	logger.Info("publishing to", "regions", config.PublishRegions)
+
+	conn, err := ensurePGConn(config.PostgresURL)
+	if err != nil {
+		logger.Error("failed to connect to Postgres", "err", err)
+		os.Exit(1)
+	}
+	defer conn.Close(context.Background())
+
+	natsConnector := ensureNATSConn(logger, config)
+	defer natsConnector.Drain()
+
+	// get monitors
+	queryCtx, queryCancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer queryCancel()
+	monitors, err := fetchActiveMonitors(queryCtx, conn)
+	if err != nil {
+		logger.Error("failed to fetch active monitors", "err", err)
+		os.Exit(1)
+	}
+	logger.Info("loaded active monitors", "count", len(monitors))
+
+	// initialise the timing wheel with a generous output buffer
+	tw := NewMonitorWheel(len(monitors) * 4)
+	for _, m := range monitors {
+		tw.Load(m)
+	}
+	tw.Start()
+	defer tw.Stop()
+
+	// consume dispatched monitors
+	go func() {
+		for m := range tw.Out {
+			builtTask, err := buildMonitorTask(m)
+			if err != nil {
+				logger.Error("failed to build task", "err", err)
+				continue
+			}
+
+			logger.Info("monitor fired", "id", builtTask.GetId(), "name", m.Name, "endpoint", m.Endpoint)
+
+			data, err := proto.Marshal(builtTask)
+			if err != nil {
+				logger.Error("marshal failed", "task_id", builtTask.GetId(), "err", err)
+				continue
+			}
+
+			subjectPrefix := "tasks."
+			var wg sync.WaitGroup
+			for _, region := range config.PublishRegions {
+				wg.Go(func() {
+					msg := natsgo.NewMsg(subjectPrefix + region)
+					msg.Data = data
+					msg.Header.Set("Nats-TTL", fmt.Sprintf("%.0ds", int(float64(m.Frequency)*0.9)))
+
+					publishCtx, publishCancel := context.WithTimeout(context.Background(), time.Second*5)
+					defer publishCancel()
+					_, err := natsConnector.PublishMsg(publishCtx, msg)
+					if err != nil {
+						logger.Error("async publish failed", "task_id", builtTask.GetId(), "region", region, "err", err)
+					}
+				})
+			}
+			wg.Wait()
+		}
+	}()
+
+	// block until SIGINT or SIGTERM
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	<-ctx.Done()
+	logger.Info("shutting down", "signal", ctx.Err())
+}
+
+func ensurePGConn(url string) (*pgx.Conn, error) {
+	pgCtx, pgCancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer pgCancel()
+	conn, err := pgx.Connect(pgCtx, url)
+	if err != nil {
+		return nil, err
+	}
+
+	pgxuuid.Register(conn.TypeMap())
+	return conn, err
+}
+
+func ensureNATSConn(logger *slog.Logger, config *dispatcherConfig) *natsconn.NATSConnector {
+	connector, err := natsconn.New(logger, natsconn.Config{
+		URL:      config.NATSURL,
+		Name:     "race-control",
+		Username: config.NATSUsername,
+		Password: config.NatsPassword,
+	})
+	if err != nil {
+		logger.Error("failed to connect to NATS", "err", err)
+		os.Exit(1)
+	}
+
+	natsCtx, natsCancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer natsCancel()
+
+	if _, err := connector.EnsureStream(natsCtx, jetstream.StreamConfig{
+		Name:        "TASKS",
+		Subjects:    []string{"tasks.>"},
+		Retention:   jetstream.WorkQueuePolicy,
+		Discard:     jetstream.DiscardOld,
+		AllowMsgTTL: true,
+		MaxAge:      time.Hour,
+		Storage:     jetstream.FileStorage,
+		Duplicates:  2 * time.Minute,
+	}); err != nil {
+		logger.Error("failed to ensure TASKS stream", "err", err)
+		os.Exit(1)
+	}
+
+	return connector
 }

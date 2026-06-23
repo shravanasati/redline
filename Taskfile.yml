@@ -49,6 +49,11 @@ tasks:
     cmds:
       - go run .
 
+  race-control:
+    dir: services/race-control
+    cmds:
+      - go run .
+
   pb-gen:
     cmds:
       - buf build
