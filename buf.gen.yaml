@@ -1,12 +1,21 @@
 version: v2
 managed:
-  enabled: true
+  enabled: false
   override:
     - file_option: go_package_prefix
       value: github.com/shravanasati/redline/services/shared/pb
+
 plugins:
+  # - remote: buf.build/protocolbuffers/go
   - local: protoc-gen-go
     out: services/shared/pb
     opt: paths=source_relative
+
+  # - remote: buf.build/protocolbuffers/python
+  - protoc_builtin: python
+    out: services/pit-wall/pb
+    types:
+      - "tasks.MonitorTaskResult"
+
 inputs:
   - directory: proto

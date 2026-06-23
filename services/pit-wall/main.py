@@ -1,5 +1,10 @@
+from pb.tasks.results_pb2 import MonitorTaskResult  # type: ignore
+
+
 def main():
-    print("Hello from pit-wall!")
+    msg = MonitorTaskResult()
+    msg.ParseFromString(b"")
+    print("Hello from pit-wall!", msg)
 
 
 if __name__ == "__main__":
