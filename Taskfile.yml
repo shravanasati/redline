@@ -1,21 +1,21 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 
 tasks:
-  paddock:
-    dir: apps/paddock
-    cmds:
-      - pnpm run dev
-
   up:
     cmds:
+      - docker compose up -d
+
+  up-build:
+    cmds:
+      - task: docker-grid-worker
+      - task: docker-grid-worker
       - docker compose up -d
 
   down:
     cmds:
       - docker compose down
-
 
   db:
     cmds:
@@ -28,6 +28,21 @@ tasks:
   psql:
     cmds:
       - docker compose exec postgres psql -U postgres -d redline
+
+  docker-grid-worker:
+    dir: services
+    cmds:
+      - docker build -f grid-worker/Dockerfile -t redline/grid-worker .
+
+  docker-race-control:
+    dir: services
+    cmds:
+      - docker build -f race-control/Dockerfile -t redline/race-control .
+
+  paddock:
+    dir: apps/paddock
+    cmds:
+      - pnpm run dev
 
   db-generate:
     dir: apps/paddock

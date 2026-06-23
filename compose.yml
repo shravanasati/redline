@@ -35,6 +35,28 @@ services:
     networks:
       - app-network
 
+  grid-worker:
+    image: redline/grid-worker
+    env_file:
+      - ./services/grid-worker/.env.docker
+    networks:
+      - app-network
+    depends_on:
+      nats:
+        condition: service_healthy
+
+  race-control:
+    image: redline/race-control
+    env_file:
+      - ./services/race-control/.env.docker
+    networks:
+      - app-network
+    depends_on:
+      nats:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   nats_data:
