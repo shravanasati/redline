@@ -14,11 +14,11 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	natsgo "github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/shravanasati/redline/services/shared/logging"
 	"github.com/shravanasati/redline/services/shared/natsconn"
+	"github.com/shravanasati/redline/services/shared/regionlist"
 )
 
 var dedupeInterval = time.Second * 20
@@ -36,8 +36,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Info("publishing to", "regions", config.PublishRegions)
-
 	conn, err := ensurePGConn(config.PostgresURL)
 	if err != nil {
 		logger.Error("failed to connect to Postgres", "err", err)
@@ -47,6 +45,14 @@ func main() {
 
 	natsConnector := ensureNATSConn(logger, config)
 	defer natsConnector.Drain()
+
+	discoveryKV, err := natsConnector.EnsureKV(context.Background(), natsconn.DiscoveryKVConfig)
+	if err != nil {
+		logger.Error("failed to establish discovery KV store", "err", err)
+		os.Exit(1)
+	}
+	regionList := regionlist.NewRegionList()
+	go workerWatcher(context.Background(), logger, discoveryKV)
 
 	// get monitors
 	queryCtx, queryCancel := context.WithTimeout(context.Background(), time.Second*10)
@@ -83,12 +89,12 @@ func main() {
 				continue
 			}
 
-			jobSlot := time.Now().Unix() / int64 (dedupeInterval.Seconds())
+			jobSlot := time.Now().Unix() / int64(dedupeInterval.Seconds())
 			jobID := fmt.Sprintf("%s:%d", builtTask.GetId(), jobSlot)
 
 			subjectPrefix := "tasks."
 			var wg sync.WaitGroup
-			for _, region := range config.PublishRegions {
+			for _, region := range regionList.Values() {
 				wg.Go(func() {
 					msg := natsgo.NewMsg(subjectPrefix + region)
 					msg.Data = data
@@ -141,16 +147,7 @@ func ensureNATSConn(logger *slog.Logger, config *dispatcherConfig) *natsconn.NAT
 	natsCtx, natsCancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer natsCancel()
 
-	if _, err := connector.EnsureStream(natsCtx, jetstream.StreamConfig{
-		Name:        "TASKS",
-		Subjects:    []string{"tasks.>"},
-		Retention:   jetstream.WorkQueuePolicy,
-		Discard:     jetstream.DiscardOld,
-		AllowMsgTTL: true,
-		MaxAge:      time.Hour,
-		Storage:     jetstream.FileStorage,
-		Duplicates:  2 * time.Minute,
-	}); err != nil {
+	if _, err := connector.EnsureStream(natsCtx, natsconn.TaskStreamConfig); err != nil {
 		logger.Error("failed to ensure TASKS stream", "err", err)
 		os.Exit(1)
 	}

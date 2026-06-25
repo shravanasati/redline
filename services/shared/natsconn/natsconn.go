@@ -55,7 +55,6 @@ func New(logger *slog.Logger, cfg Config) (*NATSConnector, error) {
 		nats.Timeout(10 * time.Second),
 		nats.PingInterval(30 * time.Second),
 		nats.MaxPingsOutstanding(3),
-		func(o *nats.Options) error { o.Pedantic = true; return nil },
 		nats.MaxReconnects(-1),
 		nats.ReconnectWait(2 * time.Second),
 		nats.ReconnectBufSize(8 << 20), // 8 MiB
@@ -112,6 +111,18 @@ func (c *NATSConnector) EnsureConsumer(ctx context.Context, stream string, cfg j
 		"filter", cfg.FilterSubject,
 	)
 	return cons, nil
+}
+
+func (c *NATSConnector) EnsureKV(ctx context.Context, kvConfig jetstream.KeyValueConfig) (jetstream.KeyValue, error) {
+	kv, err := c.js.CreateOrUpdateKeyValue(ctx, kvConfig)
+	if err != nil {
+		return nil, fmt.Errorf("ensure kv on bucket %q: %w", kvConfig.Bucket, err)
+	}
+	c.logger.Info("nats: key value ready",
+		"bucket", kvConfig.Bucket,
+	)
+
+	return kv, nil
 }
 
 // Publish synchronously publishes data to subject on the JetStream context and

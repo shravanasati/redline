@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 
 	"github.com/shravanasati/redline/services/shared/env"
 )
@@ -15,7 +14,6 @@ type dispatcherConfig struct {
 	NATSUsername   string
 	NatsPassword   string
 	PostgresURL    string
-	PublishRegions []string
 }
 
 func envOr(key, fallback string) string {
@@ -45,6 +43,5 @@ func configFromEnv(logger *slog.Logger) (*dispatcherConfig, error) {
 		NATSUsername:   mustEnv(logger, "NATS_USER_DISPATCHER"),
 		NatsPassword:   mustEnv(logger, "NATS_PASS_DISPATCHER"),
 		PostgresURL:    mustEnv(logger, "POSTGRES_URL"),
-		PublishRegions: strings.Split(mustEnv(logger, "PUBLISH_REGIONS"), ","),
 	}, nil
 }

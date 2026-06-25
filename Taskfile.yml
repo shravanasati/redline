@@ -17,7 +17,7 @@ tasks:
     cmds:
       - docker compose down
 
-  db:
+  postgres:
     cmds:
       - docker compose up postgres -d
 
