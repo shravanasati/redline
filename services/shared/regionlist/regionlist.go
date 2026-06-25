@@ -23,25 +23,36 @@ func (rl *RegionList) Has(region string) bool {
 }
 
 // Add method adds a region to the list.
-// Returns true if the region was added, false if it already existed.
-func (rl *RegionList) Add(region string) bool {
+// Returns true if the region was added, false if it already existed,
+// and the current count of the active regions.
+func (rl *RegionList) Add(region string) (bool, int) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 	_, ok := rl.regions[region]
 	if !ok {
 		rl.regions[region] = struct{}{}
 	}
-	return !ok
+	return !ok, len(rl.regions)
 }
 
-// Remove removes a region from the list.
-func (rl *RegionList) Remove(region string) {
+// Remove removes a region from the list, and
+// returns the count of active regions.
+func (rl *RegionList) Remove(region string) int {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
 	delete(rl.regions, region)
+	return len(rl.regions)
 }
 
-// Returns a copy of the regions.
+// Count returns a count of current active regions.
+func (rl *RegionList) Count() int {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+
+	return len(rl.regions)
+}
+
+// Values returns a copy of the regions.
 func (rl *RegionList) Values() []string {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()

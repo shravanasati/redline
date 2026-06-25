@@ -29,13 +29,13 @@ func workerWatcher(ctx context.Context, logger *slog.Logger, kv jetstream.KeyVal
 
 		switch op {
 		case jetstream.KeyValuePut:
-			added := regionList.Add(region)
+			added, count := regionList.Add(region)
 			if added {
-				logger.Info("new region added for monitoring", "region", region)
+				logger.Info("new region added for monitoring", "region", region, "count", count)
 			}
 		case jetstream.KeyValueDelete, jetstream.KeyValuePurge:
-			regionList.Remove(region)
-			logger.Warn("region removed from monitoring", "region", region)
+			count := regionList.Remove(region)
+			logger.Warn("region removed from monitoring", "region", region, "count", count)
 		}
 	}
 }
