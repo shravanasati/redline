@@ -24,7 +24,7 @@ func (rl *RegionList) Has(region string) bool {
 
 // Add method adds a region to the list.
 // Returns true if the region was added, false if it already existed,
-// and the current count of the active regions.
+// and the new count of the active regions.
 func (rl *RegionList) Add(region string) (bool, int) {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()

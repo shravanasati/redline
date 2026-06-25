@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/binary"
+	"hash/fnv"
 	"time"
 
 	"github.com/RussellLuo/timingwheel"
@@ -48,6 +50,41 @@ func (mw *MonitorWheel) Load(m Monitor) {
 	}
 	d := time.Duration(freq) * time.Second
 	mw.schedule(m, d)
+}
+
+// LoadWithJitter schedules m like Load but delays the very first fire by a
+// deterministic jitter derived from the monitor's UUID. This spreads initial
+// slot assignments across [0, frequency) so that monitors with the same
+// frequency do not all wake up simultaneously.
+//
+// The jitter is computed with FNV-1a over the raw UUID bytes, making it
+// reproducible across restarts for the same monitor.
+func (mw *MonitorWheel) LoadWithJitter(m Monitor) {
+	freq := m.Frequency
+	if freq <= 0 {
+		freq = 60
+	}
+	d := time.Duration(freq) * time.Second
+
+	// Derive a stable offset in [0, freq) from the monitor UUID.
+	h := fnv.New64a()
+	// UUID is [16]byte; write it as two uint64 words so we hash all 128 bits.
+	var buf [8]byte
+	binary.LittleEndian.PutUint64(buf[:], binary.LittleEndian.Uint64(m.ID[:8]))
+	h.Write(buf[:])
+	binary.LittleEndian.PutUint64(buf[:], binary.LittleEndian.Uint64(m.ID[8:]))
+	h.Write(buf[:])
+	offsetSecs := int(h.Sum64() % 60) // cap jitter within 1 minute
+	jitter := time.Duration(offsetSecs) * time.Second
+
+	// Fire once after jitter, then continue on the normal frequency cadence.
+	mw.tw.AfterFunc(jitter, func() {
+		select {
+		case mw.Out <- m:
+		default:
+		}
+		mw.schedule(m, d)
+	})
 }
 
 // schedule arms a one-shot timer that, when it fires, sends m on Out and

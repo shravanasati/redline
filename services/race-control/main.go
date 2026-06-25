@@ -67,7 +67,7 @@ func main() {
 	// initialise the timing wheel with a generous output buffer
 	tw := NewMonitorWheel(len(monitors) * 4)
 	for _, m := range monitors {
-		tw.Load(m)
+		tw.LoadWithJitter(m)
 	}
 	tw.Start()
 	defer tw.Stop()
