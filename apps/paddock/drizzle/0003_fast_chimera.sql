@@ -1,0 +1,1 @@
+CREATE INDEX "idx_monitors_id" ON "monitors" USING btree ("id");

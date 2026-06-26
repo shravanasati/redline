@@ -75,6 +75,7 @@ export const monitors = pgTable(
     timeout: integer("timeout").notNull().default(30),
     assertions: jsonb("assertions").$type<MonitorAssertions>(),
     metadata: jsonb("metadata").$type<MonitorMetadata>(),
+    version: integer("version").default(1),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -85,6 +86,7 @@ export const monitors = pgTable(
     return {
       // Indexes
       userIdIdx: index("idx_monitors_user_id").on(table.userId),
+      monitorIdIdx: index("idx_monitors_id").on(table.id),
       // Partial index for active runners
       activeRunnersIdx: index("idx_monitors_active_runners")
         .on(table.status, table.frequency)

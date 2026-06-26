@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   type MonitorAssertions,
@@ -74,6 +74,7 @@ export async function updateMonitor(
       isFailing: input.isFailing,
       assertions: input.assertions,
       metadata: input.metadata,
+      version: sql`${monitors.version} + 1`,
     })
     .where(eq(monitors.id, id))
     .returning();
@@ -98,6 +99,7 @@ export async function pauseMonitor(
     .update(monitors)
     .set({
       status: isPaused ? "paused" : "active",
+      version: sql`${monitors.version} + 1`,
     })
     .where(eq(monitors.id, id))
     .returning();

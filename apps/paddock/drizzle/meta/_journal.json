@@ -22,6 +22,20 @@
       "when": 1782037837118,
       "tag": "0002_known_shockwave",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782476581043,
+      "tag": "0003_fast_chimera",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782477514786,
+      "tag": "0004_chilly_vanisher",
+      "breakpoints": true
     }
   ]
 }
