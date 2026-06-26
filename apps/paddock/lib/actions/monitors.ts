@@ -15,6 +15,12 @@ import {
 } from "@/lib/db/crud/monitors";
 import { monitorTypeEnum } from "@/lib/db/schema/monitors";
 import { isPrivateIp } from "@/lib/url";
+import {
+  publishMonitorDeleted,
+  publishMonitorUpserted,
+  safePublish,
+} from "@/lib/nats/pubsub";
+
 
 const monitorTypeValues = monitorTypeEnum.enumValues;
 
@@ -126,6 +132,8 @@ export async function createMonitorAction(
 
     const monitor = await createMonitor(input);
 
+    await safePublish(publishMonitorUpserted(monitor.id, monitor.version ?? 1));
+
     revalidatePath("/dashboard/monitors");
 
     return { success: true, data: monitor };
@@ -184,6 +192,12 @@ export async function updateMonitorAction(
 
     const monitor = await updateMonitor(monitorId, parsed.data);
 
+    if (monitor) {
+      await safePublish(
+        publishMonitorUpserted(monitor.id, monitor.version ?? 1),
+      );
+    }
+
     revalidatePath("/dashboard/monitors");
 
     return { success: true, data: monitor };
@@ -209,6 +223,12 @@ export async function deleteMonitorAction(monitorId: string) {
     }
 
     const monitor = await deleteMonitor(monitorId);
+
+    if (monitor) {
+      await safePublish(
+        publishMonitorDeleted(monitor.id, monitor.version ?? 1),
+      );
+    }
 
     revalidatePath("/dashboard/monitors");
 
@@ -277,6 +297,12 @@ export async function toggleMonitorPauseAction(monitorId: string) {
 
     const shouldPause = existing.status === "active";
     const monitor = await pauseMonitor(monitorId, shouldPause);
+
+    if (monitor) {
+      await safePublish(
+        publishMonitorUpserted(monitor.id, monitor.version ?? 1),
+      );
+    }
 
     revalidatePath("/dashboard/monitors");
 
