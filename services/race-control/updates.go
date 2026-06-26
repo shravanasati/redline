@@ -123,9 +123,9 @@ func processPendingUpdates(ctx context.Context, conn *pgx.Conn, logger *slog.Log
 		}
 
 		cached, present := monitorMap.Get(mID)
-		if !present || m.Version >= cached.Version {
+		if !present || m.Version > cached.Version {
 			monitorMap.Set(mID, m)
-			if !present && tw != nil {
+			if tw != nil {
 				tw.LoadWithJitter(m)
 			}
 		}
