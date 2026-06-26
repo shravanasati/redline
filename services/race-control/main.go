@@ -100,8 +100,12 @@ func main() {
 			jobID := fmt.Sprintf("%s:%d", builtTask.GetId(), jobSlot)
 
 			subjectPrefix := "tasks."
+			activeRegions := regionMap.Keys()
+			if len(activeRegions) == 0 {
+				logger.Warn("no workers available to dispatch tasks to.")
+			}
 			var wg sync.WaitGroup
-			for _, region := range regionMap.Keys() {
+			for _, region := range activeRegions {
 				wg.Go(func() {
 					msg := natsgo.NewMsg(subjectPrefix + region)
 					msg.Data = data
