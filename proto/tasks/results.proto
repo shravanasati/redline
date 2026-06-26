@@ -1,18 +1,19 @@
 edition = "2024";
 
 package tasks;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/shravanasati/redline/services/shared/pb/tasks";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
-
 message MonitorTaskResult {
-    string id = 1;
-    bool success = 3;
-    string error_message = 5;
-    int32 http_status_code = 6 [features.field_presence = IMPLICIT];
-    string worker_region = 7;
+  string id = 1;
+  bool success = 3;
+  string error_message = 5;
+  int32 http_status_code = 6 [features.field_presence = IMPLICIT];
+  string worker_region = 7;
 
-    google.protobuf.Timestamp timestamp = 4;
-    google.protobuf.Duration latency = 2;
+  google.protobuf.Timestamp timestamp = 4;
+  google.protobuf.Duration latency = 2;
 }

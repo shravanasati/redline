@@ -264,7 +264,7 @@ var File_tasks_results_proto protoreflect.FileDescriptor
 
 const file_tasks_results_proto_rawDesc = "" +
 	"\n" +
-	"\x13tasks/results.proto\x12\x05tasks\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\"\xa7\x02\n" +
+	"\x13tasks/results.proto\x12\x05tasks\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa7\x02\n" +
 	"\x11MonitorTaskResult\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
 	"\asuccess\x18\x03 \x01(\bR\asuccess\x12#\n" +

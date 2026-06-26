@@ -1,0 +1,17 @@
+edition = "2024";
+
+package monitors;
+
+option go_package = "github.com/shravanasati/redline/services/shared/pb/monitors";
+
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_UPSERT = 1;
+  EVENT_TYPE_DELETE = 2;
+}
+
+message MonitorEvent {
+  EventType event_type = 1;
+  string monitor_id = 2;
+  int32 version = 3;
+}

@@ -17,5 +17,11 @@ plugins:
     types:
       - "tasks.MonitorTaskResult"
 
+  - local: protoc-gen-es
+    out: apps/paddock/lib/pb
+    opt: target=ts
+    types:
+      - "monitors.MonitorEvent"
+
 inputs:
   - directory: proto

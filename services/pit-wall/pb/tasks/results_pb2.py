@@ -22,11 +22,11 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 from google.protobuf import duration_pb2 as google_dot_protobuf_dot_duration__pb2
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13tasks/results.proto\x12\x05tasks\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/duration.proto\"\xa7\x02\n\x11MonitorTaskResult\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07success\x18\x03 \x01(\x08R\x07success\x12#\n\rerror_message\x18\x05 \x01(\tR\x0c\x65rrorMessage\x12/\n\x10http_status_code\x18\x06 \x01(\x05\x42\x05\xaa\x01\x02\x08\x02R\x0ehttpStatusCode\x12#\n\rworker_region\x18\x07 \x01(\tR\x0cworkerRegion\x12\x38\n\ttimestamp\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x33\n\x07latency\x18\x02 \x01(\x0b\x32\x19.google.protobuf.DurationR\x07latencyB:Z8github.com/shravanasati/redline/services/shared/pb/tasksb\x08\x65\x64itionsp\xe9\x07')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13tasks/results.proto\x12\x05tasks\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa7\x02\n\x11MonitorTaskResult\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07success\x18\x03 \x01(\x08R\x07success\x12#\n\rerror_message\x18\x05 \x01(\tR\x0c\x65rrorMessage\x12/\n\x10http_status_code\x18\x06 \x01(\x05\x42\x05\xaa\x01\x02\x08\x02R\x0ehttpStatusCode\x12#\n\rworker_region\x18\x07 \x01(\tR\x0cworkerRegion\x12\x38\n\ttimestamp\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x33\n\x07latency\x18\x02 \x01(\x0b\x32\x19.google.protobuf.DurationR\x07latencyB:Z8github.com/shravanasati/redline/services/shared/pb/tasksb\x08\x65\x64itionsp\xe9\x07')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
