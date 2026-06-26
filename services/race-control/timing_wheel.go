@@ -49,7 +49,7 @@ func (mw *MonitorWheel) Load(m Monitor) {
 		freq = 60
 	}
 	d := time.Duration(freq) * time.Second
-	mw.schedule(m, d)
+	mw.schedule(uuidToString(m.ID), m.Version, d)
 }
 
 // LoadWithJitter schedules m like Load but delays the very first fire by a
@@ -79,24 +79,45 @@ func (mw *MonitorWheel) LoadWithJitter(m Monitor) {
 
 	// Fire once after jitter, then continue on the normal frequency cadence.
 	mw.tw.AfterFunc(jitter, func() {
+		mLatest, present := monitorMap.Get(uuidToString(m.ID))
+		if !present || mLatest.Version != m.Version {
+			return
+		}
+
 		select {
-		case mw.Out <- m:
+		case mw.Out <- mLatest:
 		default:
 		}
-		mw.schedule(m, d)
+		mw.schedule(uuidToString(m.ID), m.Version, d)
 	})
 }
 
-// schedule arms a one-shot timer that, when it fires, sends m on Out and
-// immediately re-arms itself for the next interval.
-func (mw *MonitorWheel) schedule(m Monitor, d time.Duration) {
+// schedule arms a one-shot timer that, when it fires, pulls the latest state of the monitor,
+// sends it on Out (if active and not obsolete), and immediately re-arms itself.
+func (mw *MonitorWheel) schedule(monitorID string, scheduledVersion int, d time.Duration) {
 	mw.tw.AfterFunc(d, func() {
+		m, present := monitorMap.Get(monitorID)
+		if !present {
+			// Monitor has been deleted, stop rescheduling
+			return
+		}
+		if m.Version != scheduledVersion {
+			// A newer timer chain was started, stop rescheduling this obsolete one
+			return
+		}
+
 		// Non-blocking send: drop this delivery if the consumer is behind,
 		// but always re-schedule so the monitor continues to fire.
 		select {
 		case mw.Out <- m:
 		default:
 		}
-		mw.schedule(m, d)
+
+		freq := m.Frequency
+		if freq <= 0 {
+			freq = 60
+		}
+		newD := time.Duration(freq) * time.Second
+		mw.schedule(monitorID, scheduledVersion, newD)
 	})
 }

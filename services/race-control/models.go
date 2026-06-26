@@ -27,4 +27,11 @@ type Monitor struct {
 	Timeout    int
 	Assertions []MonitorAssertion
 	Metadata   *MonitorMetadata
+	Version    int
+}
+
+func uuidToString(u pgxuuid.UUID) string {
+	// ignoring error cuz it always returns false
+	val, _:= u.UUIDValue()
+	return val.String()
 }

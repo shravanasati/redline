@@ -18,10 +18,14 @@ import (
 
 	"github.com/shravanasati/redline/services/shared/logging"
 	"github.com/shravanasati/redline/services/shared/natsconn"
-	"github.com/shravanasati/redline/services/shared/regionlist"
+	"github.com/shravanasati/redline/services/shared/safemap"
 )
 
 var dedupeInterval = time.Second * 20
+
+var regionMap = safemap.New[string, struct{}]()
+var monitorMap = safemap.New[string, Monitor]()
+var tw *MonitorWheel
 
 func main() {
 	logger := logging.New(logging.Config{
@@ -51,22 +55,25 @@ func main() {
 		logger.Error("failed to establish discovery KV store", "err", err)
 		os.Exit(1)
 	}
-	regionList := regionlist.NewRegionList()
 	go workerWatcher(context.Background(), logger, discoveryKV)
+
+	natsConnector.Conn().Subscribe("monitors.events", func(msg *natsgo.Msg) {
+		handleMonitorEvent(logger, msg)
+	})
 
 	// get monitors
 	queryCtx, queryCancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer queryCancel()
-	monitors, err := fetchActiveMonitors(queryCtx, conn)
+	err = fetchActiveMonitors(queryCtx, conn)
 	if err != nil {
 		logger.Error("failed to fetch active monitors", "err", err)
 		os.Exit(1)
 	}
-	logger.Info("loaded active monitors", "count", len(monitors))
+	logger.Info("loaded active monitors", "count", monitorMap.Len())
 
 	// initialise the timing wheel with a generous output buffer
-	tw := NewMonitorWheel(len(monitors) * 4)
-	for _, m := range monitors {
+	tw = NewMonitorWheel((monitorMap.Len()) * 4)
+	for _, m := range monitorMap.Values() {
 		tw.LoadWithJitter(m)
 	}
 	tw.Start()
@@ -94,7 +101,7 @@ func main() {
 
 			subjectPrefix := "tasks."
 			var wg sync.WaitGroup
-			for _, region := range regionList.Values() {
+			for _, region := range regionMap.Keys() {
 				wg.Go(func() {
 					msg := natsgo.NewMsg(subjectPrefix + region)
 					msg.Data = data
@@ -116,6 +123,7 @@ func main() {
 	// block until SIGINT or SIGTERM
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+	go startMonitorResyncWorker(ctx, logger, conn)
 	<-ctx.Done()
 	logger.Info("shutting down", "signal", ctx.Err())
 }
