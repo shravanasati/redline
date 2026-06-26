@@ -299,9 +299,15 @@ export async function toggleMonitorPauseAction(monitorId: string) {
     const monitor = await pauseMonitor(monitorId, shouldPause);
 
     if (monitor) {
-      await safePublish(
-        publishMonitorUpserted(monitor.id, monitor.version ?? 1),
-      );
+      if (shouldPause) {
+        await safePublish(
+          publishMonitorDeleted(monitor.id, monitor.version ?? 1),
+        );
+      } else {
+        await safePublish(
+          publishMonitorUpserted(monitor.id, monitor.version ?? 1),
+        );
+      }
     }
 
     revalidatePath("/dashboard/monitors");

@@ -11,12 +11,12 @@ import { getNatsConnection } from "@/lib/nats/conn";
  *
  * Subscribers on `monitors.*` will receive all monitor events.
  */
-const MONITOR_SUBJECT_PREFIX = "monitors";
+const MONITOR_SUBJECT_PREFIX = "monitors.events";
 
 const NATS_PUBLISH_TIMEOUT_MS = 10_000;
 
-function monitorSubject(monitorId: string): string {
-  return `${MONITOR_SUBJECT_PREFIX}.${monitorId}`;
+function monitorSubject(): string {
+  return `${MONITOR_SUBJECT_PREFIX}`;
 }
 
 /**
@@ -37,7 +37,7 @@ export async function publishMonitorUpserted(
     version,
   });
 
-  nc.publish(monitorSubject(monitorId), toBinary(MonitorEventSchema, event));
+  nc.publish(monitorSubject(), toBinary(MonitorEventSchema, event));
 }
 
 /**
@@ -58,7 +58,7 @@ export async function publishMonitorDeleted(
     version,
   });
 
-  nc.publish(monitorSubject(monitorId), toBinary(MonitorEventSchema, event));
+  nc.publish(monitorSubject(), toBinary(MonitorEventSchema, event));
 }
 
 /**
