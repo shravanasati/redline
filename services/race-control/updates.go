@@ -46,9 +46,15 @@ func handleMonitorEvent(logger *slog.Logger, msg *nats.Msg) {
 	}
 
 	monitorID := event.GetMonitorId()
+	eventType := event.GetEventType()
 
 	cached, present := monitorMap.Get(monitorID)
 	if !present {
+		if eventType == monitors.EventType_EVENT_TYPE_DELETE {
+			logger.Info("ignoring delete for unknown monitor", "id", monitorID)
+			removeFromPending(monitorID)
+			return
+		}
 		logger.Info("received new monitor event", "id", monitorID)
 		addToPending(monitorID, int(event.GetVersion()))
 		return
@@ -60,7 +66,6 @@ func handleMonitorEvent(logger *slog.Logger, msg *nats.Msg) {
 		return
 	}
 
-	eventType := event.GetEventType()
 	if eventType == monitors.EventType_EVENT_TYPE_DELETE {
 		count := monitorMap.Remove(monitorID)
 		logger.Info("received delete monitor event", "id", monitorID, "count", count)
