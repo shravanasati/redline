@@ -74,12 +74,18 @@ const createMonitorSchema = z.object({
         value: z.union([z.string(), z.number()]),
       }),
     )
+    .max(5, "Maximum of 5 assertions allowed")
     .optional(),
   metadata: z
     .object({
-      headers: z.record(z.string(), z.string()).optional(),
+      headers: z
+        .record(z.string(), z.string())
+        .refine((val) => Object.keys(val).length <= 5, {
+          message: "Maximum of 5 headers allowed",
+        })
+        .optional(),
       method: z.enum(["GET", "POST", "HEAD"]).optional(),
-      body: z.string().optional(),
+      body: z.string().max(500, "Body must be at most 500 characters").optional(),
     })
     .optional(),
 });

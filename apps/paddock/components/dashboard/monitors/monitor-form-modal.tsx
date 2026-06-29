@@ -177,6 +177,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
 
   // Handle Assertion additions
   const addAssertion = () => {
+    if (assertions.length >= 5) return;
     setAssertions((prev) => [
       ...prev,
       {
@@ -222,6 +223,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
 
   // Handle Header additions
   const addHeader = () => {
+    if (headersList.length >= 5) return;
     setHeadersList((prev) => [
       ...prev,
       { id: crypto.randomUUID(), key: "", value: "" },
@@ -433,6 +435,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                   size="sm"
                   onClick={addAssertion}
                   className="gap-1"
+                  disabled={assertions.length >= 5}
                 >
                   <PlusIcon className="size-3.5" />
                   Add Rule
@@ -559,6 +562,7 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                     size="sm"
                     onClick={addHeader}
                     className="gap-1"
+                    disabled={headersList.length >= 5}
                   >
                     <PlusIcon className="size-3.5" />
                     Add Header
@@ -611,12 +615,16 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
               {/* Request Body (only for non-GET methods) */}
               {method === "POST" && (
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="req-body">Request Body</Label>
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="req-body">Request Body</Label>
+                    <span className="text-xs text-muted-foreground">{reqBody.length}/500</span>
+                  </div>
                   <textarea
                     id="req-body"
                     placeholder='{"key": "value"}'
                     value={reqBody}
                     onChange={(e) => setReqBody(e.target.value)}
+                    maxLength={500}
                     className="min-h-20 w-full rounded-2xl border border-transparent bg-input/50 px-3 py-2 text-sm transition-[color,box-shadow] duration-200 outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
