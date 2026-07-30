@@ -25,6 +25,10 @@ tasks:
     cmds:
       - docker compose up nats -d
 
+  timescale:
+    cmds:
+      - docker compose up timescale -d
+
   psql:
     cmds:
       - docker compose exec postgres psql -U postgres -d redline
@@ -68,6 +72,11 @@ tasks:
     dir: services/race-control
     cmds:
       - go run .
+
+  pit-wall:
+    dir: services/pit-wall
+    cmds:
+      - uv run main.py
 
   pb-gen:
     cmds:

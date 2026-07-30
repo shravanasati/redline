@@ -4,18 +4,15 @@
 # source: tasks/results.proto
 # Protobuf Python Version: 7.35.1
 """Generated protocol buffer code."""
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC,
-    7,
-    35,
-    1,
-    '',
-    'tasks/results.proto'
+    _runtime_version.Domain.PUBLIC, 7, 35, 1, "", "tasks/results.proto"
 )
 # @@protoc_insertion_point(imports)
 
@@ -26,16 +23,26 @@ from google.protobuf import duration_pb2 as google_dot_protobuf_dot_duration__pb
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13tasks/results.proto\x12\x05tasks\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa7\x02\n\x11MonitorTaskResult\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07success\x18\x03 \x01(\x08R\x07success\x12#\n\rerror_message\x18\x05 \x01(\tR\x0c\x65rrorMessage\x12/\n\x10http_status_code\x18\x06 \x01(\x05\x42\x05\xaa\x01\x02\x08\x02R\x0ehttpStatusCode\x12#\n\rworker_region\x18\x07 \x01(\tR\x0cworkerRegion\x12\x38\n\ttimestamp\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x33\n\x07latency\x18\x02 \x01(\x0b\x32\x19.google.protobuf.DurationR\x07latencyB:Z8github.com/shravanasati/redline/services/shared/pb/tasksb\x08\x65\x64itionsp\xe9\x07')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x13tasks/results.proto\x12\x05tasks\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto"\xa7\x02\n\x11MonitorTaskResult\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n\x07success\x18\x03 \x01(\x08R\x07success\x12#\n\rerror_message\x18\x05 \x01(\tR\x0c\x65rrorMessage\x12/\n\x10http_status_code\x18\x06 \x01(\x05\x42\x05\xaa\x01\x02\x08\x02R\x0ehttpStatusCode\x12#\n\rworker_region\x18\x07 \x01(\tR\x0cworkerRegion\x12\x38\n\ttimestamp\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x33\n\x07latency\x18\x02 \x01(\x0b\x32\x19.google.protobuf.DurationR\x07latencyB:Z8github.com/shravanasati/redline/services/shared/pb/tasksb\x08\x65\x64itionsp\xe9\x07'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'tasks.results_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "tasks.results_pb2", _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'Z8github.com/shravanasati/redline/services/shared/pb/tasks'
-  _globals['_MONITORTASKRESULT'].fields_by_name['http_status_code']._loaded_options = None
-  _globals['_MONITORTASKRESULT'].fields_by_name['http_status_code']._serialized_options = b'\252\001\002\010\002'
-  _globals['_MONITORTASKRESULT']._serialized_start=96
-  _globals['_MONITORTASKRESULT']._serialized_end=391
+    _globals["DESCRIPTOR"]._loaded_options = None
+    _globals[
+        "DESCRIPTOR"
+    ]._serialized_options = (
+        b"Z8github.com/shravanasati/redline/services/shared/pb/tasks"
+    )
+    _globals["_MONITORTASKRESULT"].fields_by_name[
+        "http_status_code"
+    ]._loaded_options = None
+    _globals["_MONITORTASKRESULT"].fields_by_name[
+        "http_status_code"
+    ]._serialized_options = b"\252\001\002\010\002"
+    _globals["_MONITORTASKRESULT"]._serialized_start = 96
+    _globals["_MONITORTASKRESULT"]._serialized_end = 391
 # @@protoc_insertion_point(module_scope)
