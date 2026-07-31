@@ -7,12 +7,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { Monitor } from "@/lib/db/crud/monitors";
+import type { NotificationChannel } from "@/lib/db/crud/notifications";
 
 type MonitorsTableCardProps = {
   monitors: Monitor[];
+  channels?: NotificationChannel[];
 };
 
-export function MonitorsTableCard({ monitors }: MonitorsTableCardProps) {
+export function MonitorsTableCard({ monitors, channels }: MonitorsTableCardProps) {
   return (
     <div className="px-4 lg:px-6">
       <Card>
@@ -23,7 +25,7 @@ export function MonitorsTableCard({ monitors }: MonitorsTableCardProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0 pt-0 [--card-spacing:0]">
-          <MonitorsTable monitors={monitors} />
+          <MonitorsTable monitors={monitors} channels={channels} />
         </CardContent>
       </Card>
     </div>

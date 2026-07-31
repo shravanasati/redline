@@ -19,7 +19,7 @@ export const notificationChannelTypeEnum = pgEnum("notification_channel_type", [
 
 export const monitorNotificationEventEnum = pgEnum(
   "monitor_notification_event",
-  ["MONITOR_DOWN", "MONITOR_RECOVERED", "HIGH_LATENCY"],
+  ["INCIDENT_OPENED", "INCIDENT_RESOLVED", "LATENCY_DEGRADED"],
 );
 
 export type NotificationChannelConfig = Record<string, unknown>;

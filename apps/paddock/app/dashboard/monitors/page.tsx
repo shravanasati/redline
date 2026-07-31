@@ -5,6 +5,7 @@ import { MonitorsTableCard } from "@/components/dashboard/monitors/monitors-tabl
 import Unauthenticated from "@/components/unauthorized";
 import { fetchMonitorsByUser } from "@/lib/actions/monitors";
 import { getSession } from "@/lib/auth";
+import { getNotificationChannelsByUserId } from "@/lib/db/crud/notifications";
 
 export default async function MonitorsPage() {
   const session = await getSession({ headers: await headers() });
@@ -12,7 +13,10 @@ export default async function MonitorsPage() {
     return <Unauthenticated />;
   }
 
-  const result = await fetchMonitorsByUser(session.user.id);
+  const [result, channels] = await Promise.all([
+    fetchMonitorsByUser(session.user.id),
+    getNotificationChannelsByUserId(session.user.id),
+  ]);
   const monitors = result.success && result.data ? result.data : [];
 
   // KPI calculations
@@ -28,7 +32,7 @@ export default async function MonitorsPage() {
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <MonitorsPageHeader />
+          <MonitorsPageHeader channels={channels} />
           <MonitorsKpiCards
             total={total}
             active={active}
@@ -38,7 +42,7 @@ export default async function MonitorsPage() {
             healthy={healthy}
             uptimePercent={uptimePercent}
           />
-          <MonitorsTableCard monitors={monitors} />
+          <MonitorsTableCard monitors={monitors} channels={channels} />
         </div>
       </div>
     </div>

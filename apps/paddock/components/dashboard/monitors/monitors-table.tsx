@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { NotificationChannel } from "@/lib/db/crud/notifications";
 import { toggleMonitorPauseAction } from "@/lib/actions/monitors";
 import { DeleteMonitorButton } from "./delete-monitor-button";
 import { MonitorFormModal } from "./monitor-form-modal";
@@ -138,7 +139,13 @@ function TogglePauseButton({
   );
 }
 
-export function MonitorsTable({ monitors }: { monitors: Monitor[] }) {
+export function MonitorsTable({
+  monitors,
+  channels,
+}: {
+  monitors: Monitor[];
+  channels?: NotificationChannel[];
+}) {
   if (monitors.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
@@ -204,7 +211,11 @@ export function MonitorsTable({ monitors }: { monitors: Monitor[] }) {
                   monitorId={monitor.id}
                   status={monitor.status}
                 />
-                <MonitorFormModal mode="edit" monitor={monitor} />
+                <MonitorFormModal
+                  mode="edit"
+                  monitor={monitor}
+                  channels={channels}
+                />
                 <DeleteMonitorButton
                   monitorId={monitor.id}
                   monitorName={monitor.name}

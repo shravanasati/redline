@@ -1,6 +1,11 @@
 import { MonitorFormModal } from "@/components/dashboard/monitors/monitor-form-modal";
+import type { NotificationChannel } from "@/lib/db/crud/notifications";
 
-export function MonitorsPageHeader() {
+type MonitorsPageHeaderProps = {
+  channels?: NotificationChannel[];
+};
+
+export function MonitorsPageHeader({ channels }: MonitorsPageHeaderProps) {
   return (
     <div className="flex items-center justify-between px-4 lg:px-6">
       <div>
@@ -9,7 +14,7 @@ export function MonitorsPageHeader() {
           Track the uptime and performance of your endpoints.
         </p>
       </div>
-      <MonitorFormModal mode="create" />
+      <MonitorFormModal mode="create" channels={channels} />
     </div>
   );
 }

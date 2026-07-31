@@ -13,7 +13,12 @@ import {
   pauseMonitor,
   updateMonitor,
 } from "@/lib/db/crud/monitors";
+import {
+  getNotificationChannelsByUserId,
+  setMonitorNotificationRules,
+} from "@/lib/db/crud/notifications";
 import { monitorTypeEnum } from "@/lib/db/schema/monitors";
+import { monitorNotificationEventEnum } from "@/lib/db/schema/notifications";
 import { isPrivateIp } from "@/lib/url";
 import {
   publishMonitorDeleted,
@@ -22,6 +27,13 @@ import {
 } from "@/lib/nats/pubsub";
 
 const monitorTypeValues = monitorTypeEnum.enumValues;
+const monitorNotificationEventValues = monitorNotificationEventEnum.enumValues;
+
+const notificationRuleSchema = z.object({
+  channelId: z.string().uuid(),
+  event: z.enum(monitorNotificationEventValues),
+  enabled: z.boolean().default(true),
+});
 
 const createMonitorSchema = z.object({
   name: z.string().min(1).max(255),
@@ -90,6 +102,7 @@ const createMonitorSchema = z.object({
         .optional(),
     })
     .optional(),
+  notificationRules: z.array(notificationRuleSchema).optional(),
 });
 
 const updateMonitorSchema = createMonitorSchema.partial();
@@ -120,25 +133,55 @@ export async function createMonitorAction(
       } catch {}
     }
 
+    let notificationRulesJson: unknown;
+    if (raw.notificationRules) {
+      try {
+        notificationRulesJson = JSON.parse(raw.notificationRules as string);
+      } catch {}
+    }
+
     const parsed = createMonitorSchema.safeParse({
       ...raw,
       frequency: raw.frequency ? Number(raw.frequency) : undefined,
       timeout: raw.timeout ? Number(raw.timeout) : undefined,
       assertions: assertionsJson,
       metadata: metadataJson,
+      notificationRules: notificationRulesJson,
     });
 
     if (!parsed.success) {
       return { success: false, error: parsed.error.flatten().fieldErrors };
     }
 
+    const { notificationRules, ...monitorData } = parsed.data;
+
+    if (notificationRules && notificationRules.length > 0) {
+      const userChannels = await getNotificationChannelsByUserId(
+        session.user.id,
+      );
+      const userChannelIds = new Set(userChannels.map((c) => c.id));
+      const hasUnauthorizedChannel = notificationRules.some(
+        (rule) => !userChannelIds.has(rule.channelId),
+      );
+      if (hasUnauthorizedChannel) {
+        return {
+          success: false,
+          error: "Invalid or unauthorized notification channel specified",
+        };
+      }
+    }
+
     const input: CreateMonitorInput = {
       userId: session.user.id,
       status: "active",
-      ...parsed.data,
+      ...monitorData,
     };
 
     const monitor = await createMonitor(input);
+
+    if (notificationRules) {
+      await setMonitorNotificationRules(monitor.id, notificationRules);
+    }
 
     await safePublish(publishMonitorUpserted(monitor.id, monitor.version ?? 1));
 
@@ -186,19 +229,49 @@ export async function updateMonitorAction(
       } catch {}
     }
 
+    let notificationRulesJson: unknown;
+    if (raw.notificationRules) {
+      try {
+        notificationRulesJson = JSON.parse(raw.notificationRules as string);
+      } catch {}
+    }
+
     const parsed = updateMonitorSchema.safeParse({
       ...raw,
       frequency: raw.frequency ? Number(raw.frequency) : undefined,
       timeout: raw.timeout ? Number(raw.timeout) : undefined,
       assertions: assertionsJson,
       metadata: metadataJson,
+      notificationRules: notificationRulesJson,
     });
 
     if (!parsed.success) {
       return { success: false, error: parsed.error.flatten().fieldErrors };
     }
 
-    const monitor = await updateMonitor(monitorId, parsed.data);
+    const { notificationRules, ...monitorData } = parsed.data;
+
+    if (notificationRules && notificationRules.length > 0) {
+      const userChannels = await getNotificationChannelsByUserId(
+        session.user.id,
+      );
+      const userChannelIds = new Set(userChannels.map((c) => c.id));
+      const hasUnauthorizedChannel = notificationRules.some(
+        (rule) => !userChannelIds.has(rule.channelId),
+      );
+      if (hasUnauthorizedChannel) {
+        return {
+          success: false,
+          error: "Invalid or unauthorized notification channel specified",
+        };
+      }
+    }
+
+    const monitor = await updateMonitor(monitorId, monitorData);
+
+    if (monitor && notificationRules !== undefined) {
+      await setMonitorNotificationRules(monitorId, notificationRules);
+    }
 
     if (monitor) {
       await safePublish(

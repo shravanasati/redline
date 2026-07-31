@@ -4,11 +4,13 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
+import { getMonitorById } from "@/lib/db/crud/monitors";
 import {
   type CreateNotificationChannelInput,
   createNotificationChannel,
   deleteNotificationChannel,
   getNotificationChannelsByUserId,
+  getNotificationRulesByMonitorId,
   toggleNotificationChannelEnabled,
   updateNotificationChannel,
 } from "@/lib/db/crud/notifications";
@@ -194,3 +196,29 @@ export async function toggleNotificationChannelEnabledAction(
     return { success: false, error: (e as Error).message };
   }
 }
+
+export async function fetchNotificationRulesByMonitorAction(
+  monitorId: string,
+) {
+  try {
+    const session = await getSession({ headers: await headers() });
+    if (!session?.user?.id) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    const monitor = await getMonitorById(monitorId);
+    if (!monitor) {
+      return { success: false, error: "Monitor not found" };
+    }
+    if (monitor.userId !== session.user.id) {
+      return { success: false, error: "Forbidden" };
+    }
+
+    const rules = await getNotificationRulesByMonitorId(monitorId);
+    return { success: true, data: rules };
+  } catch (e) {
+    console.error("fetchNotificationRulesByMonitorAction failed:", e);
+    return { success: false, error: (e as Error).message };
+  }
+}
+

@@ -1,6 +1,15 @@
 "use client";
 
-import { LoaderIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import {
+  BellIcon,
+  ExternalLinkIcon,
+  LoaderIcon,
+  MailIcon,
+  MessageSquareIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+} from "lucide-react";
 import {
   useActionState,
   useCallback,
@@ -8,6 +17,8 @@ import {
   useRef,
   useState,
 } from "react";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,6 +43,8 @@ import {
   createMonitorAction,
   updateMonitorAction,
 } from "@/lib/actions/monitors";
+import { fetchNotificationRulesByMonitorAction } from "@/lib/actions/notifications";
+import type { NotificationChannel } from "@/lib/db/crud/notifications";
 
 type MonitorMetadata = {
   method?: string;
@@ -53,11 +66,13 @@ type Monitor = {
 
 type CreateMonitorModalProps = {
   mode: "create";
+  channels?: NotificationChannel[];
 };
 
 type EditMonitorModalProps = {
   mode: "edit";
   monitor: Monitor;
+  channels?: NotificationChannel[];
 };
 
 type MonitorFormModalProps = CreateMonitorModalProps | EditMonitorModalProps;
@@ -76,6 +91,17 @@ type HeaderItem = {
   id: string;
   key: string;
   value: string;
+};
+
+type NotificationEventType =
+  | "INCIDENT_OPENED"
+  | "INCIDENT_RESOLVED"
+  | "LATENCY_DEGRADED";
+
+type NotificationRuleState = {
+  channelId: string;
+  event: NotificationEventType;
+  enabled: boolean;
 };
 
 const MONITOR_TYPES = ["ICMP", "HTTP", "HTTPS", "TCP", "DNS"] as const;
@@ -102,6 +128,7 @@ function FieldError({ errors }: { errors?: string[] }) {
 export function MonitorFormModal(props: MonitorFormModalProps) {
   const isEdit = props.mode === "edit";
   const monitor = isEdit ? props.monitor : undefined;
+  const channels = props.channels ?? [];
 
   // Bind monitorId for edit mode
   const boundUpdateAction =
@@ -131,6 +158,10 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
   const [method, setMethod] = useState<string>("GET");
   const [headersList, setHeadersList] = useState<HeaderItem[]>([]);
   const [reqBody, setReqBody] = useState<string>("");
+  const [notificationRules, setNotificationRules] = useState<
+    NotificationRuleState[]
+  >([]);
+  const [isLoadingRules, setIsLoadingRules] = useState<boolean>(false);
 
   // Snap frequency
   const snapFrequency = useCallback((v?: number): FrequencyValue => {
@@ -156,6 +187,31 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
         setMethod("GET");
         setHeadersList([]);
         setReqBody("");
+
+        // Default rules: enable INCIDENT_OPENED & INCIDENT_RESOLVED for active channels
+        const defaultRules: NotificationRuleState[] = [];
+        for (const channel of channels) {
+          if (channel.enabled) {
+            defaultRules.push(
+              {
+                channelId: channel.id,
+                event: "INCIDENT_OPENED",
+                enabled: true,
+              },
+              {
+                channelId: channel.id,
+                event: "INCIDENT_RESOLVED",
+                enabled: true,
+              },
+              {
+                channelId: channel.id,
+                event: "LATENCY_DEGRADED",
+                enabled: false,
+              },
+            );
+          }
+        }
+        setNotificationRules(defaultRules);
       } else if (monitor) {
         setType(monitor.type);
         setFrequency(snapFrequency(monitor.frequency));
@@ -171,9 +227,46 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
           ),
         );
         setReqBody(monitor.metadata?.body ?? "");
+
+        // Fetch existing notification rules for monitor
+        setIsLoadingRules(true);
+        fetchNotificationRulesByMonitorAction(monitor.id).then((res) => {
+          setIsLoadingRules(false);
+          if (res.success && res.data) {
+            const existingRules: NotificationRuleState[] = res.data.map(
+              (r) => ({
+                channelId: r.channelId,
+                event: r.event as NotificationEventType,
+                enabled: r.enabled,
+              }),
+            );
+            setNotificationRules(existingRules);
+          }
+        });
       }
     }
-  }, [open, isEdit, monitor, snapFrequency]);
+  }, [open, isEdit, monitor, snapFrequency, channels]);
+
+  // Handle Rule toggle
+  const toggleNotificationRule = (
+    channelId: string,
+    event: NotificationEventType,
+  ) => {
+    setNotificationRules((prev) => {
+      const existingIdx = prev.findIndex(
+        (r) => r.channelId === channelId && r.event === event,
+      );
+      if (existingIdx >= 0) {
+        const updated = [...prev];
+        updated[existingIdx] = {
+          ...updated[existingIdx],
+          enabled: !updated[existingIdx].enabled,
+        };
+        return updated;
+      }
+      return [...prev, { channelId, event, enabled: true }];
+    });
+  };
 
   // Handle Assertion additions
   const addAssertion = () => {
@@ -296,13 +389,13 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
           </DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Update the details and rules for this monitor."
+              ? "Update details, assertions, and notification rules for this monitor."
               : "Add a new endpoint monitor to track its uptime and performance."}
           </DialogDescription>
         </DialogHeader>
 
         <form ref={formRef} action={action} className="flex flex-col gap-4">
-          {/* Hidden inputs for select and complex values */}
+          {/* Hidden inputs for complex values */}
           <input type="hidden" name="type" value={type} />
           <input type="hidden" name="frequency" value={frequency} />
           <input
@@ -315,16 +408,22 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
             name="metadata"
             value={JSON.stringify(serializedMetadata)}
           />
+          <input
+            type="hidden"
+            name="notificationRules"
+            value={JSON.stringify(notificationRules.filter((r) => r.enabled))}
+          />
 
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="general">General Config</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="assertions">Assertions</TabsTrigger>
-              <TabsTrigger value="metadata">Request Details</TabsTrigger>
+              <TabsTrigger value="metadata">Headers & Body</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
             </TabsList>
 
             {/* General Settings */}
@@ -631,6 +730,151 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                   />
                 </div>
               )}
+            </TabsContent>
+
+            {/* Notification Rules Tab */}
+            <TabsContent value="notifications" className="flex flex-col gap-3 pt-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-semibold">Notification Rules</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Select which channels receive alerts for monitor incidents.
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/settings"
+                  target="_blank"
+                  className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+                >
+                  Manage Channels
+                  <ExternalLinkIcon className="size-3" />
+                </Link>
+              </div>
+
+              {channels.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-6 border border-dashed rounded-2xl text-center gap-2">
+                  <BellIcon className="size-8 text-muted-foreground/60" />
+                  <p className="text-sm font-medium">No Notification Channels</p>
+                  <p className="text-xs text-muted-foreground max-w-sm">
+                    Set up Discord or Email channels in Settings to dispatch alerts when this monitor triggers an incident.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 gap-1.5"
+                    asChild
+                  >
+                    <Link href="/dashboard/settings" target="_blank">
+                      <span>Manage Channels</span>
+                      <ExternalLinkIcon className="size-3.5" />
+                    </Link>
+                  </Button>
+                </div>
+              ) : isLoadingRules ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoaderIcon className="size-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 max-h-[260px] overflow-y-auto pr-1">
+                  {channels.map((channel) => {
+                    const eventList: Array<{
+                      key: NotificationEventType;
+                      label: string;
+                      badgeClass: string;
+                    }> = [
+                      {
+                        key: "INCIDENT_OPENED",
+                        label: "Incident Opened",
+                        badgeClass:
+                          "text-destructive border-destructive/30 bg-destructive/10",
+                      },
+                      {
+                        key: "INCIDENT_RESOLVED",
+                        label: "Incident Resolved",
+                        badgeClass:
+                          "text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
+                      },
+                      {
+                        key: "LATENCY_DEGRADED",
+                        label: "Latency Degraded",
+                        badgeClass:
+                          "text-amber-600 dark:text-amber-400 border-amber-500/30 bg-amber-500/10",
+                      },
+                    ];
+
+                    return (
+                      <div
+                        key={channel.id}
+                        className="flex flex-col gap-2 p-3 bg-muted/40 rounded-2xl border border-border/40"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {channel.type === "discord" ? (
+                              <MessageSquareIcon className="size-4 text-indigo-500 dark:text-indigo-400" />
+                            ) : (
+                              <MailIcon className="size-4 text-sky-500 dark:text-sky-400" />
+                            )}
+                            <span className="font-medium text-sm">
+                              {channel.name}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] capitalize py-0 px-1.5 font-normal"
+                            >
+                              {channel.type}
+                            </Badge>
+                          </div>
+                          {!channel.enabled && (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] text-muted-foreground border-amber-500/30 bg-amber-500/10"
+                            >
+                              Disabled
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 pt-1">
+                          {eventList.map((evt) => {
+                            const rule = notificationRules.find(
+                              (r) =>
+                                r.channelId === channel.id &&
+                                r.event === evt.key,
+                            );
+                            const isEnabled = rule?.enabled ?? false;
+
+                            return (
+                              <button
+                                key={evt.key}
+                                type="button"
+                                onClick={() =>
+                                  toggleNotificationRule(channel.id, evt.key)
+                                }
+                                className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-xs transition-colors ${
+                                  isEnabled
+                                    ? evt.badgeClass
+                                    : "border-muted bg-background text-muted-foreground hover:bg-muted/50"
+                                }`}
+                              >
+                                <span>{evt.label}</span>
+                                <span
+                                  className={`size-2 rounded-full ${
+                                    isEnabled
+                                      ? "bg-current"
+                                      : "bg-muted-foreground/30"
+                                  }`}
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <FieldError errors={fieldErrors?.notificationRules} />
             </TabsContent>
           </Tabs>
 

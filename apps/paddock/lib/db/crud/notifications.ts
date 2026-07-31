@@ -1,8 +1,13 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { notificationChannels } from "@/lib/db/schema/notifications";
+import {
+  monitorNotificationRules,
+  notificationChannels,
+} from "@/lib/db/schema/notifications";
 
 export type NotificationChannel = typeof notificationChannels.$inferSelect;
+export type MonitorNotificationRule =
+  typeof monitorNotificationRules.$inferSelect;
 
 export type CreateNotificationChannelInput = {
   userId: string;
@@ -14,6 +19,12 @@ export type CreateNotificationChannelInput = {
 export type UpdateNotificationChannelInput = {
   name?: string;
   config?: Record<string, unknown>;
+};
+
+export type SetMonitorNotificationRuleInput = {
+  channelId: string;
+  event: MonitorNotificationRule["event"];
+  enabled?: boolean;
 };
 
 export async function createNotificationChannel(
@@ -98,3 +109,48 @@ export async function deleteNotificationChannel(
 
   return channel;
 }
+
+export async function getNotificationRulesByMonitorId(monitorId: string) {
+  return db.query.monitorNotificationRules.findMany({
+    where: eq(monitorNotificationRules.monitorId, monitorId),
+    with: {
+      channel: true,
+    },
+  });
+}
+
+export async function getNotificationRulesByMonitorIds(monitorIds: string[]) {
+  if (monitorIds.length === 0) return [];
+  return db.query.monitorNotificationRules.findMany({
+    where: inArray(monitorNotificationRules.monitorId, monitorIds),
+    with: {
+      channel: true,
+    },
+  });
+}
+
+export async function setMonitorNotificationRules(
+  monitorId: string,
+  rules: SetMonitorNotificationRuleInput[],
+): Promise<MonitorNotificationRule[]> {
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(monitorNotificationRules)
+      .where(eq(monitorNotificationRules.monitorId, monitorId));
+
+    if (rules.length === 0) return [];
+
+    return tx
+      .insert(monitorNotificationRules)
+      .values(
+        rules.map((rule) => ({
+          monitorId,
+          channelId: rule.channelId,
+          event: rule.event,
+          enabled: rule.enabled ?? true,
+        })),
+      )
+      .returning();
+  });
+}
+
