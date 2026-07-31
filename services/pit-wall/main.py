@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 from typing import Tuple
 from dotenv import load_dotenv
 import asyncpg

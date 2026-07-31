@@ -1,8 +1,5 @@
 import { create, toBinary } from "@bufbuild/protobuf";
-import {
-  EventType,
-  MonitorEventSchema,
-} from "@/lib/pb/monitors/updates_pb";
+import { EventType, MonitorEventSchema } from "@/lib/pb/monitors/updates_pb";
 import { getNatsConnection } from "@/lib/nats/conn";
 
 /**

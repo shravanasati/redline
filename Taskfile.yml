@@ -29,6 +29,10 @@ tasks:
     cmds:
       - docker compose up timescale -d
 
+  infra:
+    cmds:
+     - docker compose up postgres nats timescale -d
+
   psql:
     cmds:
       - docker compose exec postgres psql -U postgres -d redline

@@ -21,7 +21,6 @@ import {
   safePublish,
 } from "@/lib/nats/pubsub";
 
-
 const monitorTypeValues = monitorTypeEnum.enumValues;
 
 const createMonitorSchema = z.object({
@@ -85,7 +84,10 @@ const createMonitorSchema = z.object({
         })
         .optional(),
       method: z.enum(["GET", "POST", "HEAD"]).optional(),
-      body: z.string().max(500, "Body must be at most 500 characters").optional(),
+      body: z
+        .string()
+        .max(500, "Body must be at most 500 characters")
+        .optional(),
     })
     .optional(),
 });

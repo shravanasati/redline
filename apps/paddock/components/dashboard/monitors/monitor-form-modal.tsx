@@ -617,7 +617,9 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
                 <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-center">
                     <Label htmlFor="req-body">Request Body</Label>
-                    <span className="text-xs text-muted-foreground">{reqBody.length}/500</span>
+                    <span className="text-xs text-muted-foreground">
+                      {reqBody.length}/500
+                    </span>
                   </div>
                   <textarea
                     id="req-body"

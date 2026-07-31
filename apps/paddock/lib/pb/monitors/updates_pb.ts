@@ -2,15 +2,22 @@
 // @generated from file monitors/updates.proto (package monitors, edition 2024)
 /* eslint-disable */
 
-import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import type {
+  GenEnum,
+  GenFile,
+  GenMessage,
+} from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file monitors/updates.proto.
  */
-export const file_monitors_updates: GenFile = /*@__PURE__*/
-  fileDesc("ChZtb25pdG9ycy91cGRhdGVzLnByb3RvEghtb25pdG9ycyJcCgxNb25pdG9yRXZlbnQSJwoKZXZlbnRfdHlwZRgBIAEoDjITLm1vbml0b3JzLkV2ZW50VHlwZRISCgptb25pdG9yX2lkGAIgASgJEg8KB3ZlcnNpb24YAyABKAUqVQoJRXZlbnRUeXBlEhoKFkVWRU5UX1RZUEVfVU5TUEVDSUZJRUQQABIVChFFVkVOVF9UWVBFX1VQU0VSVBABEhUKEUVWRU5UX1RZUEVfREVMRVRFEAJCPVo7Z2l0aHViLmNvbS9zaHJhdmFuYXNhdGkvcmVkbGluZS9zZXJ2aWNlcy9zaGFyZWQvcGIvbW9uaXRvcnNiCGVkaXRpb25zcOkH");
+export const file_monitors_updates: GenFile =
+  /*@__PURE__*/
+  fileDesc(
+    "ChZtb25pdG9ycy91cGRhdGVzLnByb3RvEghtb25pdG9ycyJcCgxNb25pdG9yRXZlbnQSJwoKZXZlbnRfdHlwZRgBIAEoDjITLm1vbml0b3JzLkV2ZW50VHlwZRISCgptb25pdG9yX2lkGAIgASgJEg8KB3ZlcnNpb24YAyABKAUqVQoJRXZlbnRUeXBlEhoKFkVWRU5UX1RZUEVfVU5TUEVDSUZJRUQQABIVChFFVkVOVF9UWVBFX1VQU0VSVBABEhUKEUVWRU5UX1RZUEVfREVMRVRFEAJCPVo7Z2l0aHViLmNvbS9zaHJhdmFuYXNhdGkvcmVkbGluZS9zZXJ2aWNlcy9zaGFyZWQvcGIvbW9uaXRvcnNiCGVkaXRpb25zcOkH",
+  );
 
 /**
  * @generated from message monitors.MonitorEvent
@@ -36,7 +43,8 @@ export type MonitorEvent = Message<"monitors.MonitorEvent"> & {
  * Describes the message monitors.MonitorEvent.
  * Use `create(MonitorEventSchema)` to create a new message.
  */
-export const MonitorEventSchema: GenMessage<MonitorEvent> = /*@__PURE__*/
+export const MonitorEventSchema: GenMessage<MonitorEvent> =
+  /*@__PURE__*/
   messageDesc(file_monitors_updates, 0);
 
 /**
@@ -62,6 +70,6 @@ export enum EventType {
 /**
  * Describes the enum monitors.EventType.
  */
-export const EventTypeSchema: GenEnum<EventType> = /*@__PURE__*/
+export const EventTypeSchema: GenEnum<EventType> =
+  /*@__PURE__*/
   enumDesc(file_monitors_updates, 0);
-
