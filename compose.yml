@@ -83,7 +83,6 @@ services:
       timescale:
         condition: service_healthy
 
-
   timescale:
     image: timescale/timescaledb:latest-pg17
     ports:
@@ -97,7 +96,11 @@ services:
     volumes:
       - timescale_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALE_USER:-postgres} -d ${TIMESCALE_DB:-redline_metrics}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${TIMESCALE_USER:-postgres} -d ${TIMESCALE_DB:-redline_metrics}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
