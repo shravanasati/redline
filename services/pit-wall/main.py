@@ -7,7 +7,13 @@ import nats
 from nats.js import JetStreamContext
 from nats.errors import TimeoutError as NatsTimeoutError
 
-from config import get_nats_config, get_timescale_dsn
+from config import get_app_db_dsn, get_nats_config, get_timescale_dsn
+from notifications import (
+    DiscordNotificationChannel,
+    NotificationManager,
+    handle_probe_failure,
+    init_app_db_pool,
+)
 from timescale import (
     init_timescale_pool,
     init_timescale_schema,
@@ -43,6 +49,23 @@ async def init_timescale() -> asyncpg.Pool:
     return pool
 
 
+async def init_app_db() -> asyncpg.Pool:
+    """
+    Initialize Application PostgreSQL DB connection pool.
+    """
+    dsn = get_app_db_dsn()
+    return await init_app_db_pool(dsn)
+
+
+def setup_notification_manager() -> NotificationManager:
+    """
+    Instantiate NotificationManager and register supported channel handlers.
+    """
+    manager = NotificationManager()
+    manager.register_channel("discord", DiscordNotificationChannel())
+    return manager
+
+
 async def init_nats() -> Tuple[nats.NATS, JetStreamContext.PullSubscription]:
     """
     Validate credentials, connect to NATS, and bind durable JetStream pull subscriber.
@@ -70,10 +93,13 @@ async def init_nats() -> Tuple[nats.NATS, JetStreamContext.PullSubscription]:
 
 
 async def run_consumer(
-    pool: asyncpg.Pool, sub: JetStreamContext.PullSubscription
+    timescale_pool: asyncpg.Pool,
+    app_db_pool: asyncpg.Pool,
+    notification_manager: NotificationManager,
+    sub: JetStreamContext.PullSubscription,
 ) -> None:
     """
-    Fetch batches from NATS pull consumer, parse protobuf, and insert to TimescaleDB.
+    Fetch batches from NATS pull consumer, parse protobuf, insert to TimescaleDB, and trigger alerts on failures.
     """
     logger.info(
         "Started consumer loop. Fetching batches of %d messages (timeout: %.1fs)...",
@@ -88,6 +114,10 @@ async def run_consumer(
             for msg in msgs:
                 result = MonitorTaskResult()
                 result.ParseFromString(msg.data)
+
+                # Trigger notification if probe failed
+                if not result.success:
+                    await handle_probe_failure(app_db_pool, result, notification_manager)
 
                 time_val = result.timestamp.ToDatetime()
                 latency_ms = result.latency.ToTimedelta().total_seconds() * 1000.0
@@ -111,7 +141,7 @@ async def run_consumer(
 
             if records:
                 # Write batch to TimescaleDB
-                await insert_monitor_results_batch(pool, records)
+                await insert_monitor_results_batch(timescale_pool, records)
                 logger.info(
                     "Persisted batch of %d monitor results to TimescaleDB.",
                     len(records),
@@ -129,25 +159,30 @@ async def run_consumer(
 
 
 async def main() -> None:
-    pool = None
+    timescale_pool = None
+    app_db_pool = None
     nc = None
     try:
-        # 1. Initialize DB and NATS separately
-        pool = await init_timescale()
+        # 1. Initialize DB pools, NotificationManager, and NATS
+        timescale_pool = await init_timescale()
+        app_db_pool = await init_app_db()
+        notification_manager = setup_notification_manager()
         nc, sub = await init_nats()
 
         # 2. Run consumer loop
-        await run_consumer(pool, sub)
+        await run_consumer(timescale_pool, app_db_pool, notification_manager, sub)
     except asyncio.CancelledError:
         logger.info("Consumer loop cancelled.")
     except Exception as e:
         logger.critical("Fatal error in main service loop: %s", e, exc_info=True)
     finally:
-        logger.info("Draining NATS connection and closing DB pool...")
+        logger.info("Draining NATS connection and closing DB pools...")
         if nc and not nc.is_closed:
             await nc.drain()
-        if pool:
-            await pool.close()
+        if timescale_pool:
+            await timescale_pool.close()
+        if app_db_pool:
+            await app_db_pool.close()
 
 
 if __name__ == "__main__":
@@ -155,3 +190,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Exiting pit-wall service.")
+
