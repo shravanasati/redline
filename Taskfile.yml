@@ -10,7 +10,8 @@ tasks:
   up-build:
     cmds:
       - task: docker-grid-worker
-      - task: docker-grid-worker
+      - task: docker-race-control
+      - task: docker-pit-wall
       - docker compose up -d
 
   down:
@@ -46,6 +47,11 @@ tasks:
     dir: services
     cmds:
       - docker build -f race-control/Dockerfile -t redline/race-control .
+
+  docker-pit-wall:
+    dir: services/pit-wall
+    cmds:
+      - docker build -t redline/pit-wall .
 
   paddock:
     dir: apps/paddock

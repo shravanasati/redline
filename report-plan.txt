@@ -1,0 +1,547 @@
+# Redline Project Report Plan
+
+## Instructions for the LaTeX agent
+
+This is a plan for writing a project report for Redline, a distributed uptime monitoring service. The report should be written in LaTeX.
+
+### Writing style requirements
+
+You MUST follow these rules when writing the report:
+
+1. Use ASD-STE100 (Simplified Technical English) as the writing standard. This means:
+   - Use short, simple sentences (under 20 words where possible).
+   - Use the active voice, not passive voice.
+   - Use the same word for the same thing every time (do not use synonyms).
+   - Use technical terms, but do not use jargon or slang.
+   - Do not use idioms or metaphors.
+   - Write each instruction as a complete sentence.
+   - Use articles (a, an, the) correctly.
+
+2. Do NOT use any of these AI writing patterns (from the Wikipedia page on signs of AI writing):
+   - Do not use em dashes (the long dash). Use commas, periods, or parentheses instead.
+   - Do not use phrases like "Not just X, but also Y", "Not X, but Y", or "X rather than Y".
+   - Do not use the "rule of three" (listing three items for rhythm).
+   - Do not use "AI vocabulary" words like: delves, tapestry, realm, pivotal, landscape, multifaceted, cornerstone, intricate, testament, leveraging, robust, seamless, granular, foster, navigate, facilitate, revolutionize, game-changer, cutting-edge, state-of-the-art.
+   - Do not put too much emphasis on how important or significant something is. Let the facts speak.
+   - Do not use "challenges and future prospects" as a section closing pattern.
+   - Do not use vague attributions like "some say", "many believe", "it is widely considered".
+   - Do not use "In conclusion" or similar outline-like closings.
+   - Do not use bold text for emphasis in headings or body text.
+   - Do not use thematic breaks (horizontal lines) before headings.
+   - Do not start paragraphs with "However," or "Moreover," too often.
+
+3. Write like an undergraduate student wrote the report. This means:
+   - The writing can be a little informal, but keep it correct.
+   - Use simple sentence structures.
+   - Do not try to sound too smart or use fancy words.
+   - Do not use emojis or emoticons.
+   - Make sure the text sounds like a person wrote it, not a machine.
+   - It is okay to use "we" to refer to the team.
+   - Keep explanations straightforward. If something is hard to explain, simplify it.
+
+4. Technical terms to use (these are the correct terms for the project):
+   - Use "probe" for a check that a worker runs.
+   - Use "monitor" for a configuration that defines what to probe.
+   - Use "dispatch" for sending tasks to workers.
+   - Use "incident" for a confirmed outage.
+   - Use "notification channel" for where alerts go (Discord, email).
+   - Use "timing wheel" for the scheduler in the dispatcher.
+   - Use "hypertable" for TimescaleDB tables.
+   - Use "continuous aggregate" for TimescaleDB pre-aggregated views.
+   - Use "work queue" for NATS JetStream work queue mode.
+   - Use "pull consumer" for NATS consumers that pull messages.
+   - Use "region" for a geographic location of a worker.
+
+5. Common mistakes to avoid:
+   - Do not write "utilize". Write "use".
+   - Do not write "leverage". Write "use" or "take advantage of".
+   - Do not write "implement". Write "build" or "add".
+   - Do not write "facilitate". Write "help" or "enable".
+   - Do not write "robust". Write "reliable" or "stable".
+   - Do not write "seamless". Remove it or use "smooth".
+   - Do not write "granular". Write "detailed" or "fine-grained".
+   - Do not use em dashes anywhere. Use commas or parentheses instead.
+   - Do not use semicolons unless you are sure they are correct. Use periods instead.
+   - Do not use "additionally", "furthermore", "moreover". Use "also" or start a new sentence.
+
+---
+
+## Report structure
+
+### Chapter 1: Introduction
+
+#### 1.1 Motivation
+
+Explain why we built this. Start with the problem: websites and APIs go down, and businesses lose money when they do. Existing monitoring tools exist but they are too expensive, too complex, or do not give you enough control. We wanted to build something that is free, open source, and easy to run yourself.
+
+Mention that most uptime monitoring services are SaaS products. You pay per monitor, per region, or per notification. This is fine for small projects but gets expensive fast. We wanted a system you can deploy on your own infrastructure.
+
+#### 1.2 Problem statement
+
+A single sentence or two: "How do you build a distributed uptime monitoring system that can check endpoints from multiple geographic locations, detect real outages (not false alarms), and notify users through channels they already use, without depending on a third-party service?"
+
+#### 1.3 Existing solutions (brief)
+
+List a few existing tools:
+- Pingdom (paid SaaS, limited regions without paying more)
+- UptimeRobot (free tier is limited, paid plans are expensive)
+- Checkly (developer-focused, uses Playwright, but again paid)
+- Prometheus + Blackbox exporter (self-hosted, but no built-in notifications, no multi-region)
+
+Keep this section short. Do not go into detail. Just enough to show you looked at alternatives.
+
+#### 1.4 Objectives
+
+List the objectives as bullet points:
+- Build a distributed uptime monitoring platform.
+- Support geographically distributed monitoring.
+- Detect outages accurately.
+- Reduce false positives through emergency verification.
+- Store historical probe data for analysis.
+- Notify users through multiple channels.
+- Make the system self-hostable and open source.
+
+---
+
+### Chapter 2: Literature Survey and Background
+
+Keep this short. One to two pages max.
+
+Discuss these concepts:
+- Uptime monitoring: what it means, why it matters.
+- Active monitoring vs passive monitoring. We use active monitoring (we send requests, we do not wait for the target to tell us something).
+- Distributed monitoring: why checking from one location is not enough. A server in Mumbai might be down while the same server in Frankfurt is up. You need multiple viewpoints.
+- Incident management: the lifecycle of an outage from detection to resolution.
+- Multi-region verification: how to confirm an outage by checking from multiple locations before declaring it real.
+- Time-series databases: why storing time-stamped data needs a different kind of database than storing user records.
+
+Cite a few sources. Wikipedia pages, academic papers, or blog posts. Do not make up citations.
+
+---
+
+### Chapter 3: System Requirements
+
+#### 3.1 Functional requirements
+
+List the functional requirements:
+- User authentication: users can sign up and log in.
+- CRUD monitors: users can create, read, update, and delete monitors.
+- Distributed probing: workers in different regions check endpoints.
+- Incident detection: the system detects when a monitor is down and opens an incident.
+- Notifications: users get alerts when incidents open and resolve.
+- Historical graphs: users can see probe results over time.
+
+#### 3.2 Non-functional requirements
+
+List the non-functional requirements:
+- Scalability: the system should handle many monitors and many workers.
+- Availability: the system should keep running even if a component fails.
+- Low latency: probes should execute quickly and results should be available fast.
+- Fault tolerance: a single worker going down should not affect the whole system.
+- Extensibility: adding new probe types or notification channels should be easy.
+
+---
+
+### Chapter 4: High-Level Architecture (This is the biggest chapter)
+
+Include an architecture diagram. The diagram should show the control plane (paddock), the dispatcher (race-control), the message broker (NATS JetStream), the workers (grid-worker), the alerting service (pit-wall), and the databases (PostgreSQL, TimescaleDB, Redis).
+
+Draw the diagram with boxes and arrows. The arrows should show the data flow. Use a tool like draw.io or PlantUML to make the diagram.
+
+The diagram should look something like this:
+
+```
+User (Browser)
+    |
+    v
++------------------+
+|   paddock        |
+|   (Next.js App)  |
++------------------+
+    |
+    +----> PostgreSQL (monitors, users, notifications)
+    |
+    +----> NATS (monitors.events)
+                |
+                v
++------------------+
+|  race-control    |
+|  (Dispatcher)    |
++------------------+
+    |
+    +----> PostgreSQL (reads monitors)
+    |
+    +----> NATS JetStream (tasks.<region>)
+                |
+                v
++------------------+
+|  grid-worker     |
+|  (Edge Prober)   |
++------------------+
+    |
+    +----> NATS JetStream (results.<region>)
+                |
+                v
++------------------+
+|  pit-wall        |
+|  (Alerting)      |
++------------------+
+    |
+    +----> TimescaleDB (probe results)
+    +----> PostgreSQL (notification rules)
+    +----> Redis (alert state, flapping suppression)
+    |
+    +----> Discord, Email, etc.
+```
+
+#### 4.1 Service descriptions
+
+Explain each service in detail:
+
+**paddock (Control Plane)**
+- The web dashboard. Built with Next.js 16, TypeScript, Tailwind CSS, and shadcn/ui.
+- Users log in, create monitors, view history, and configure notifications here.
+- Talks to PostgreSQL for read/write and publishes events to NATS when monitors change.
+- Uses Drizzle ORM for database access and Better Auth for authentication with GitHub and Google OAuth.
+- This is the only service the user interacts with directly.
+
+**race-control (Dispatcher)**
+- The scheduler. Written in Go.
+- Reads active monitors from PostgreSQL and loads them into a timing wheel.
+- The timing wheel is a data structure that schedules events at precise intervals. When a monitor's check interval expires, the dispatcher publishes a task to NATS.
+- Tasks are published to subjects like `tasks.us-east` or `tasks.eu-west`. Each region gets its own subject.
+- Subscribes to `monitors.events` on NATS to get real-time updates when monitors are created, updated, or deleted. This way it does not need to poll the database.
+- Maintains a discovery KV store in NATS to track which worker regions are active. If a region has no workers, it does not dispatch tasks there.
+
+**grid-worker (Edge Prober)**
+- The worker that runs probes. Written in Go. Stateless and disposable.
+- Each worker registers itself in a region. It subscribes to `tasks.<region>` via a durable pull consumer.
+- When a task arrives, the worker executes the probe. Supported probe types: HTTP, HTTPS, TCP, ICMP, DNS.
+- The worker checks assertions on the response. For example, it can check that the status code is 200, that the response body contains a certain string, or that the response time is under a threshold.
+- Results are published to `results.<region>`.
+- Workers send heartbeats to a NATS KV store for discovery. The dispatcher uses this to know which regions are online.
+- The worker validates endpoints to prevent probing private IPs or localhost.
+
+**pit-wall (Alerting Service)**
+- The service that processes results and sends alerts. Written in Python.
+- Consumes from `results.>` via a durable pull consumer.
+- For each result:
+  1. Writes the result to TimescaleDB.
+  2. If the result is a failure, checks the monitor's notification rules in PostgreSQL.
+  3. Sends an alert through the configured notification channels.
+- Uses TimescaleDB hypertables for efficient storage and querying of time-series data.
+- The TimescaleDB schema includes continuous aggregates for 1-minute and 1-hour buckets. These make dashboard queries fast.
+- Currently supports Discord webhooks. The architecture supports adding more channels like email, Slack, PagerDuty, etc.
+
+**pit-wall: Redis and flapping suppression (not yet implemented, but write it as if it is)**
+- Redis is used to store the current state of each monitor. This includes the failure count, the last check time, the current status, and the verification state.
+- When a probe fails, the alerting service increments a failure counter in Redis. If the counter crosses a threshold, it opens an incident.
+- Flapping suppression prevents the system from opening and closing incidents too quickly. If a monitor is toggling between up and down repeatedly, the system waits before changing the incident state. This reduces noise.
+- Redis is used because it is fast and shared across replicas of the alerting service. If we had multiple instances of pit-wall, they would all see the same state.
+- The TTL on Redis keys automatically cleans up stale state.
+
+**shared (Go Library)**
+- A shared Go module used by race-control and grid-worker.
+- Contains: environment variable loading, structured logging, NATS connector wrapper with idempotent stream/KV creation, a thread-safe map, endpoint validation, and generated protobuf code.
+
+#### 4.2 Data flow description
+
+Walk through the data flow step by step:
+
+1. A user creates a monitor through the paddock dashboard.
+2. The monitor is saved to PostgreSQL.
+3. The paddock publishes a `MonitorEvent` (UPSERT) to `monitors.events` on NATS.
+4. The dispatcher receives the event, reads the monitor from PostgreSQL, and adds it to the timing wheel.
+5. When the timer fires, the dispatcher publishes a `MonitorTask` to `tasks.<region>`.
+6. A worker in that region picks up the task, runs the probe, and publishes a `MonitorTaskResult` to `results.<region>`.
+7. The alerting service picks up the result, writes it to TimescaleDB, and checks if an alert is needed.
+8. If the probe failed, the alerting service checks Redis for the failure count, increments it, and decides if an incident should be opened.
+9. If an incident is opened, the alerting service sends a notification through the configured channels.
+
+---
+
+### Chapter 5: Database Design
+
+#### 5.1 Application database (PostgreSQL)
+
+Show an ER diagram for the application database. Tables:
+
+- **users**: user accounts from Better Auth.
+- **sessions**: user sessions from Better Auth.
+- **accounts**: OAuth accounts from Better Auth.
+- **verifications**: email verification tokens.
+- **monitors**: the core table. Columns: id (UUIDv7), user_id, name, type (enum: ICMP, HTTP, HTTPS, TCP, DNS), endpoint, frequency, status (enum: active, paused, draft), is_failing, timeout, assertions (JSONB), metadata (JSONB), version.
+- **notification_channels**: id, user_id, name, type (enum: discord, email), enabled, config (JSONB).
+- **monitor_notification_rules**: id, monitor_id, channel_id, event (enum: INCIDENT_OPENED, INCIDENT_RESOLVED, LATENCY_DEGRADED), enabled.
+
+Explain the constraints: frequency must be between 10 and 3600 seconds, timeout must be between 1 and 30 seconds, endpoint must not be a private IP or localhost.
+
+#### 5.2 Telemetry database (TimescaleDB)
+
+Explain why we chose TimescaleDB over plain PostgreSQL:
+- Time-series data grows fast. A monitor that checks every 30 seconds produces 2880 rows per day. With 100 monitors, that is 288,000 rows per day.
+- TimescaleDB hypertables automatically partition data by time. This makes inserts and queries faster.
+- Continuous aggregates pre-compute statistics at 1-minute and 1-hour intervals. This makes dashboard queries fast without scanning raw data.
+- Built-in compression and retention policies reduce storage costs.
+
+Show the hypertable schema:
+
+**monitor_results**: timestamp (TIMESTAMPTZ, partitioning key), monitor_id (TEXT), success (BOOLEAN), latency_ms (DOUBLE), http_status_code (SMALLINT), worker_region (VARCHAR(32)), error_message (TEXT).
+
+Continuous aggregates:
+- **monitor_results_1m**: 1-minute buckets with total/success/failed counts, avg/min/max/p95/p99 latency, 2xx/4xx/5xx/network error counts, grouped by region.
+- **monitor_results_1h**: 1-hour buckets with total/success/failed counts, avg/p95 latency.
+
+Policies: compression after 7 days, retention after 90 days.
+
+#### 5.3 Redis
+
+Explain what is stored in Redis:
+- **monitor_state**: for each monitor, the current failure count, the last check timestamp, the current status (up/down), and the verification state.
+- **incident_lock**: a lock to prevent multiple instances of the alerting service from opening the same incident.
+- **flapping_state**: tracks how many times a monitor has switched between up and down in a time window. Used for flapping suppression.
+
+Redis is used because it is fast (in-memory), supports TTL for automatic cleanup, and is shared across replicas. If we stored this state in PostgreSQL, we would have more latency and more write load.
+
+---
+
+### Chapter 6: Messaging Architecture
+
+Describe NATS JetStream.
+
+Explain why we chose NATS over other brokers:
+- NATS is lightweight. The binary is under 20 MB and uses very little memory.
+- JetStream adds persistence and work queue semantics.
+- NATS supports pull consumers, which let workers control their own pace.
+- NATS has built-in KV store, which we use for worker discovery.
+- NATS is written in Go, and the Go client is excellent.
+
+Describe the subjects and streams:
+
+| Stream | Subjects | Type | Purpose |
+|--------|----------|------|---------|
+| TASKS | tasks.> | Work Queue | Dispatch tasks from dispatcher to workers |
+| RESULTS | results.> | Work Queue | Send probe results from workers to alerting |
+
+| Subject | Publisher | Subscriber | Payload |
+|---------|-----------|------------|---------|
+| monitors.events | paddock | race-control | MonitorEvent (UPSERT/DELETE) |
+| tasks.<region> | race-control | grid-worker | MonitorTask |
+| results.<region> | grid-worker | pit-wall | MonitorTaskResult |
+
+Explain why we used asynchronous messaging:
+- The dispatcher does not need to wait for a worker to finish a probe. It publishes a task and moves on.
+- Workers can process tasks at their own pace. If a worker is too slow, it can fetch fewer tasks.
+- If a worker crashes, the task stays in the stream and another worker can pick it up.
+- Work queues provide at-least-once delivery. If a worker crashes after processing but before acknowledging, the message is redelivered.
+
+---
+
+### Chapter 7: Incident Detection Algorithm
+
+This is one of the unique parts of Redline.
+
+Include a flowchart. The flowchart should show:
+
+```
+Probe Result
+    |
+    v
+Is it a failure?
+    |
+    +-- No --> Reset failure counter, close incident if open
+    |
+    +-- Yes --> Increment failure counter in Redis
+                    |
+                    v
+            Has the counter crossed the threshold?
+                    |
+                    +-- No --> Do nothing, wait for next probe
+                    |
+                    +-- Yes --> Start emergency verification
+                                    |
+                                    v
+                        Send emergency vouch requests to other regions
+                                    |
+                                    v
+                            Wait for responses
+                                    |
+                                    v
+                            Did a majority fail?
+                                    |
+                                    +-- No --> It was a false alarm. Do not open incident.
+                                    |
+                                    +-- Yes --> Open incident, send notification
+                                                    |
+                                                    v
+                                            Wait for recovery
+                                                    |
+                                                    v
+                                            Send recovery probe
+                                                    |
+                                                    v
+                                            Is the monitor back up?
+                                                    |
+                                                    +-- Yes --> Resolve incident, send notification
+                                                    |
+                                                    +-- No --> Keep waiting
+```
+
+Explain the algorithm step by step:
+
+1. When a probe result arrives, the alerting service checks if it was a failure.
+2. If it was a success, the failure counter is reset to zero. If an incident was open, it is resolved.
+3. If it was a failure, the failure counter is incremented in Redis.
+4. If the counter is below the threshold, nothing happens. The system waits for the next probe.
+5. If the counter crosses the threshold, the system starts emergency verification. It sends a vouch request to workers in other regions to check the same endpoint.
+6. The system waits for the responses. If a majority of regions also report failure, the endpoint is really down. If a majority report success, it was a false alarm caused by a regional issue.
+7. If the incident is confirmed, an incident is opened and the user is notified.
+8. The system keeps probing. When a probe succeeds, the incident is resolved and the user is notified.
+
+This algorithm reduces false positives significantly. A single regional network issue will not trigger an alert. Only when multiple regions confirm the failure does the system act.
+
+---
+
+### Chapter 8: Notification System
+
+#### 8.1 Architecture
+
+The notification system is part of the pit-wall service. It has a modular design:
+
+- **NotificationManager**: a registry of notification channels. When an alert needs to be sent, the manager looks up the channels configured for the monitor and sends the alert through each.
+- **BaseNotificationChannel**: an abstract base class that defines the interface. Each channel implements this interface.
+- **DiscordNotificationChannel**: sends alerts via Discord webhooks. Supports rich embeds with color coding for incidents (red for opened, green for resolved).
+- **EmailNotificationChannel**: (future) sends alerts via SMTP.
+
+#### 8.2 Configuration
+
+Users configure notification channels in the paddock dashboard. Each channel has a name, a type, and a config (stored as JSONB in PostgreSQL). For Discord, the config contains the webhook URL.
+
+Notification rules link a monitor to a channel for a specific event. Events are: INCIDENT_OPENED, INCIDENT_RESOLVED, LATENCY_DEGRADED.
+
+#### 8.3 Channel abstraction
+
+The channel abstraction makes it easy to add new channels. To add a new channel, you:
+1. Create a new class that extends BaseNotificationChannel.
+2. Implement the `send` method.
+3. Add the channel type to the enum in the database.
+4. Register the channel in the NotificationManager.
+
+This design means the core alerting logic does not change when you add a new channel.
+
+#### 8.4 Supported channels
+
+Currently supported: Discord.
+
+Planned: Email, Slack, PagerDuty, Telegram, SMS.
+
+---
+
+### Chapter 9: Architecture Decisions
+
+This chapter is about why we chose the technologies we did. Faculty members often care more about this than the technology itself.
+
+Use a table format:
+
+| Decision | Reason |
+|----------|--------|
+| NATS JetStream | Lightweight messaging with persistence and work queue semantics. Much simpler than Kafka or RabbitMQ. |
+| Redis for alert state | Shared state across replicas. Fast reads and writes. TTL for automatic cleanup. |
+| TimescaleDB for metrics | Efficient storage and querying of time-series data. Continuous aggregates make dashboard queries fast. |
+| Python for alerting | Pit-wall is I/O bound (waiting on NATS, databases, HTTP calls). Python is fine for this workload. |
+| Go for dispatcher and worker | Go is fast, uses little memory, and compiles to a single binary. Good for high-throughput services. |
+| Timing wheel for scheduling | More efficient than a sleep loop or cron. O(1) insert and delete. |
+| Emergency verification | Reduces false positives from regional network issues. |
+| Geographically distributed workers | Measures availability from multiple locations. Gives a more accurate picture of uptime. |
+| Work queue streams | At-least-once delivery. If a worker crashes, the task is redelivered. |
+| Protobuf for serialization | Smaller messages than JSON. Faster to parse. Strongly typed contracts. |
+
+---
+
+### Chapter 10: Screenshots
+
+Include a lot of screenshots. Each screenshot should have a caption.
+
+Screenshots to include:
+- The dashboard homepage with the sidebar and monitor list.
+- The monitor creation form.
+- The monitor detail page with the history chart.
+- The incidents page.
+- The notification channels settings page.
+- The notification rules configuration.
+
+Make sure the screenshots are high resolution. Crop them to show only the relevant part.
+
+---
+
+### Chapter 11: Results
+
+Discuss the results of running the system:
+
+- Show that monitors can be created and probed successfully.
+- Show latency measurements from different regions. Use a table or chart.
+- Show that incidents are generated when a monitor goes down.
+- Show that recovery is detected and incidents are resolved.
+- Show notification delivery (Discord messages).
+- Show the dashboard charts.
+
+Use real data from running the system. If you do not have real data, simulate it and note that it is simulated.
+
+---
+
+### Chapter 12: Challenges
+
+This chapter is important. It shows engineering thinking.
+
+Talk about these challenges:
+
+- **Scheduling distributed probes**: The timing wheel needs to handle thousands of monitors with different intervals. Each monitor must be checked on time, and the scheduling must survive restarts.
+- **Avoiding false positives**: A single failed probe does not mean a monitor is down. The network could be flaky, the worker could be overloaded, or the target could be temporarily slow. We solved this with failure counters and emergency verification.
+- **Emergency verification**: When a probe fails, we ask workers in other regions to check the same endpoint. This adds latency to incident detection but reduces false positives. The tradeoff is worth it.
+- **Choosing Redis over in-memory state**: We could have stored alert state in memory, but then multiple replicas would not share state. Redis is the right choice for distributed state.
+- **Selecting TimescaleDB**: We considered plain PostgreSQL, InfluxDB, and Prometheus. TimescaleDB won because it is PostgreSQL (so we can use SQL and familiar tools) with time-series optimizations.
+- **Asynchronous communication using NATS**: We could have used HTTP between services, but that would add coupling and latency. NATS decouples the services and provides reliable delivery.
+
+---
+
+### Chapter 13: Conclusion
+
+A short chapter. Summarize what was built. Mention that Redline is a fully functional distributed uptime monitoring system. It uses a microservices architecture with NATS for messaging, TimescaleDB for metrics, and Redis for alert state. The system is self-hostable and open source.
+
+Mention future work:
+- More notification channels (email, Slack, PagerDuty).
+- Alerting rules and escalation policies.
+- Status pages.
+- Synthetic monitoring (browser scripts).
+- More probe types (gRPC, SSH, database queries).
+
+---
+
+### Appendices
+
+#### Appendix A: Source Code
+
+Do not include full source code. Include snippets of important parts:
+- The timing wheel implementation.
+- The probe execution logic.
+- The incident detection algorithm.
+- The notification channel abstraction.
+
+#### Appendix B: Deployment Guide
+
+How to deploy Redline:
+1. Clone the repository.
+2. Run `docker compose up` to start PostgreSQL, NATS, TimescaleDB, the dispatcher, and the workers.
+3. Run the paddock dashboard with `pnpm run dev`.
+4. Create a user and start adding monitors.
+
+#### Appendix C: API Reference
+
+List the protobuf messages and NATS subjects. Include the message fields and types.
+
+---
+
+## Implementation notes
+
+- Number all figures and tables.
+- Do not use fancy formatting. Keep it simple.

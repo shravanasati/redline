@@ -45,6 +45,18 @@ services:
       nats:
         condition: service_healthy
 
+  grid-worker-eu-west:
+    image: redline/grid-worker
+    env_file:
+      - ./services/grid-worker/.env.docker
+    environment:
+      WORKER_REGION: eu-west
+    networks:
+      - app-network
+    depends_on:
+      nats:
+        condition: service_healthy
+
   race-control:
     image: redline/race-control
     env_file:
@@ -56,6 +68,21 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+
+  pit-wall:
+    image: redline/pit-wall
+    env_file:
+      - ./services/pit-wall/.env.docker
+    networks:
+      - app-network
+    depends_on:
+      nats:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      timescale:
+        condition: service_healthy
+
 
   timescale:
     image: timescale/timescaledb:latest-pg17
