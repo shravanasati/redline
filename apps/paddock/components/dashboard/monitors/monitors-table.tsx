@@ -11,6 +11,7 @@ import {
   ServerIcon,
   WifiIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -178,7 +179,14 @@ export function MonitorsTable({
       <TableBody>
         {monitors.map((monitor) => (
           <TableRow key={monitor.id} className="group">
-            <TableCell className="font-medium">{monitor.name}</TableCell>
+            <TableCell className="font-medium">
+              <Link
+                href={`/dashboard/monitors/${monitor.id}`}
+                className="hover:underline font-semibold text-foreground transition-colors"
+              >
+                {monitor.name}
+              </Link>
+            </TableCell>
             <TableCell>
               <Badge
                 variant="outline"

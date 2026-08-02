@@ -733,10 +733,15 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
             </TabsContent>
 
             {/* Notification Rules Tab */}
-            <TabsContent value="notifications" className="flex flex-col gap-3 pt-3">
+            <TabsContent
+              value="notifications"
+              className="flex flex-col gap-3 pt-3"
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm font-semibold">Notification Rules</Label>
+                  <Label className="text-sm font-semibold">
+                    Notification Rules
+                  </Label>
                   <p className="text-xs text-muted-foreground">
                     Select which channels receive alerts for monitor incidents.
                   </p>
@@ -754,9 +759,12 @@ export function MonitorFormModal(props: MonitorFormModalProps) {
               {channels.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-6 border border-dashed rounded-2xl text-center gap-2">
                   <BellIcon className="size-8 text-muted-foreground/60" />
-                  <p className="text-sm font-medium">No Notification Channels</p>
+                  <p className="text-sm font-medium">
+                    No Notification Channels
+                  </p>
                   <p className="text-xs text-muted-foreground max-w-sm">
-                    Set up Discord or Email channels in Settings to dispatch alerts when this monitor triggers an incident.
+                    Set up Discord or Email channels in Settings to dispatch
+                    alerts when this monitor triggers an incident.
                   </p>
                   <Button
                     type="button"

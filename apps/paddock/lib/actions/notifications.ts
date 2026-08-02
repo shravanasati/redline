@@ -197,9 +197,7 @@ export async function toggleNotificationChannelEnabledAction(
   }
 }
 
-export async function fetchNotificationRulesByMonitorAction(
-  monitorId: string,
-) {
+export async function fetchNotificationRulesByMonitorAction(monitorId: string) {
   try {
     const session = await getSession({ headers: await headers() });
     if (!session?.user?.id) {
@@ -221,4 +219,3 @@ export async function fetchNotificationRulesByMonitorAction(
     return { success: false, error: (e as Error).message };
   }
 }
-

@@ -14,7 +14,10 @@ type MonitorsTableCardProps = {
   channels?: NotificationChannel[];
 };
 
-export function MonitorsTableCard({ monitors, channels }: MonitorsTableCardProps) {
+export function MonitorsTableCard({
+  monitors,
+  channels,
+}: MonitorsTableCardProps) {
   return (
     <div className="px-4 lg:px-6">
       <Card>

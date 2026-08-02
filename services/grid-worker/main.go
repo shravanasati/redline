@@ -20,6 +20,8 @@ const (
 	fetchHeartbeat    = 3 * time.Second // must be < fetchMaxWait/2
 )
 
+var cfg workerConfig
+
 func main() {
 	logger := logging.New(logging.Config{
 		Service: "grid-worker",
@@ -27,12 +29,13 @@ func main() {
 		Format:  logging.FormatText,
 	})
 
-	if err := env.Load(logger); err != nil {
+	var err error
+	if err = env.Load(logger); err != nil {
 		logger.Error("failed to load .env file", "err", err)
 		os.Exit(1)
 	}
 
-	cfg, err := configFromEnv()
+	cfg, err = configFromEnv()
 	if err != nil {
 		logger.Error("configuration error", "err", err)
 		os.Exit(1)

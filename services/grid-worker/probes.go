@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+
 // newFailResult constructs a failure MonitorTaskResult with the given task ID and error message.
 func newFailResult(id, errMsg string, latency time.Duration) *tasks.MonitorTaskResult {
 	return tasks.MonitorTaskResult_builder{
@@ -24,16 +25,18 @@ func newFailResult(id, errMsg string, latency time.Duration) *tasks.MonitorTaskR
 		ErrorMessage: &errMsg,
 		Timestamp:    timestamppb.Now(),
 		Latency:      durationpb.New(latency),
+		WorkerRegion: &cfg.Region,
 	}.Build()
 }
 
 // newSuccessResult constructs a success MonitorTaskResult.
 func newSuccessResult(id string, latency time.Duration) *tasks.MonitorTaskResult {
 	return tasks.MonitorTaskResult_builder{
-		Id:        &id,
-		Success:   new(true),
-		Timestamp: timestamppb.Now(),
-		Latency:   durationpb.New(latency),
+		Id:           &id,
+		Success:      new(true),
+		Timestamp:    timestamppb.Now(),
+		Latency:      durationpb.New(latency),
+		WorkerRegion: &cfg.Region,
 	}.Build()
 }
 

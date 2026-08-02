@@ -110,12 +110,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -209,12 +205,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -224,9 +216,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -290,9 +280,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -523,12 +511,8 @@
           "name": "monitors_user_id_user_id_fk",
           "tableFrom": "monitors",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -637,12 +621,8 @@
           "name": "monitor_notification_rules_monitor_id_monitors_id_fk",
           "tableFrom": "monitor_notification_rules",
           "tableTo": "monitors",
-          "columnsFrom": [
-            "monitor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["monitor_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -650,12 +630,8 @@
           "name": "monitor_notification_rules_channel_id_notification_channels_id_fk",
           "tableFrom": "monitor_notification_rules",
           "tableTo": "notification_channels",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["channel_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -746,12 +722,8 @@
           "name": "notification_channels_user_id_user_id_fk",
           "tableFrom": "notification_channels",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -767,39 +739,22 @@
     "public.monitor_status": {
       "name": "monitor_status",
       "schema": "public",
-      "values": [
-        "active",
-        "paused",
-        "draft"
-      ]
+      "values": ["active", "paused", "draft"]
     },
     "public.monitor_type": {
       "name": "monitor_type",
       "schema": "public",
-      "values": [
-        "ICMP",
-        "HTTP",
-        "HTTPS",
-        "TCP",
-        "DNS"
-      ]
+      "values": ["ICMP", "HTTP", "HTTPS", "TCP", "DNS"]
     },
     "public.monitor_notification_event": {
       "name": "monitor_notification_event",
       "schema": "public",
-      "values": [
-        "MONITOR_DOWN",
-        "MONITOR_RECOVERED",
-        "HIGH_LATENCY"
-      ]
+      "values": ["MONITOR_DOWN", "MONITOR_RECOVERED", "HIGH_LATENCY"]
     },
     "public.notification_channel_type": {
       "name": "notification_channel_type",
       "schema": "public",
-      "values": [
-        "discord",
-        "email"
-      ]
+      "values": ["discord", "email"]
     }
   },
   "schemas": {},
