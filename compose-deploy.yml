@@ -36,7 +36,7 @@ services:
       - app-network
 
   grid-worker:
-    image: redline/grid-worker
+    image: shravanasati/redline-grid-worker
     env_file:
       - ./services/grid-worker/.env.docker
     networks:
@@ -46,7 +46,7 @@ services:
         condition: service_healthy
 
   grid-worker-eu-west:
-    image: redline/grid-worker
+    image: shravanasati/redline-grid-worker
     env_file:
       - ./services/grid-worker/.env.docker
     environment:
@@ -58,7 +58,7 @@ services:
         condition: service_healthy
 
   race-control:
-    image: redline/race-control
+    image: shravanasati/redline-race-control
     env_file:
       - ./services/race-control/.env.docker
     networks:
@@ -70,7 +70,7 @@ services:
         condition: service_healthy
 
   pit-wall:
-    image: redline/pit-wall
+    image: shravanasati/redline-pit-wall
     env_file:
       - ./services/pit-wall/.env.docker
     networks:
