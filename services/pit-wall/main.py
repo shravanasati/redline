@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import timezone
 from typing import Tuple
 from dotenv import load_dotenv
 import asyncpg
@@ -35,8 +36,9 @@ load_dotenv()
 STREAM_NAME = "RESULTS"
 SUBJECT = "results.>"
 DURABLE_NAME = "pit-wall-results"
-BATCH_SIZE = 25
-FETCH_TIMEOUT = 5.0  # seconds
+BATCH_SIZE = 100
+FETCH_TIMEOUT = 5.0  # seconds — max wait for at least one message from NATS
+FLUSH_INTERVAL = 2.0  # seconds — max age of a partial buffer before flushing
 
 
 async def init_timescale() -> asyncpg.Pool:
@@ -99,27 +101,56 @@ async def run_consumer(
     sub: JetStreamContext.PullSubscription,
 ) -> None:
     """
-    Fetch batches from NATS pull consumer, parse protobuf, insert to TimescaleDB, and trigger alerts on failures.
+    Continuously drain NATS into an in-memory buffer and flush to TimescaleDB
+    when either the buffer reaches BATCH_SIZE or FLUSH_INTERVAL has elapsed
+    since the oldest buffered record. Acks happen after a successful insert.
     """
     logger.info(
-        "Started consumer loop. Fetching batches of %d messages (timeout: %.1fs)...",
+        "Started consumer loop. Buffer flushes at %d records or every %.1fs...",
         BATCH_SIZE,
-        FETCH_TIMEOUT,
+        FLUSH_INTERVAL,
     )
+
+    records: list = []
+    msgs: list = []
+    buffer_started: float | None = None
+
+    async def flush() -> None:
+        nonlocal records, msgs, buffer_started
+        if not records:
+            return
+        batch_len = len(records)
+        try:
+            await insert_monitor_results_batch(timescale_pool, records)
+            logger.info(
+                "Persisted batch of %d monitor results to TimescaleDB.", batch_len
+            )
+            for m in msgs:
+                await m.ack()
+        finally:
+            records = []
+            msgs = []
+            buffer_started = None
+
     while True:
         try:
-            msgs = await sub.fetch(batch=BATCH_SIZE, timeout=FETCH_TIMEOUT)
-            records = []
+            # If buffer is empty, block waiting for at least one message.
+            # If buffer is partial, fetch with a short timeout so we can
+            # honor FLUSH_INTERVAL and grow the batch opportunistically.
+            timeout = FETCH_TIMEOUT if buffer_started is None else 0.05
+            fetched = await sub.fetch(batch=BATCH_SIZE, timeout=timeout)
 
-            for msg in msgs:
+            now = asyncio.get_event_loop().time()
+            for msg in fetched:
                 result = MonitorTaskResult()
                 result.ParseFromString(msg.data)
 
-                # Trigger notification if probe failed
                 if not result.success:
-                    await handle_probe_failure(app_db_pool, result, notification_manager)
+                    await handle_probe_failure(
+                        app_db_pool, result, notification_manager
+                    )
 
-                time_val = result.timestamp.ToDatetime()
+                time_val = result.timestamp.ToDatetime(tzinfo=timezone.utc)
                 latency_ms = result.latency.ToTimedelta().total_seconds() * 1000.0
                 http_status = (
                     result.http_status_code if result.http_status_code != 0 else None
@@ -138,21 +169,26 @@ async def run_consumer(
                         error_msg,
                     )
                 )
+                msgs.append(msg)
 
-            if records:
-                # Write batch to TimescaleDB
-                await insert_monitor_results_batch(timescale_pool, records)
-                logger.info(
-                    "Persisted batch of %d monitor results to TimescaleDB.",
-                    len(records),
-                )
+            if buffer_started is None and records:
+                buffer_started = now
 
-                # Acknowledge messages only after successful DB insert
-                for msg in msgs:
-                    await msg.ack()
+            # Flush when full, or when the oldest record is older than FLUSH_INTERVAL.
+            should_flush = bool(records) and (
+                len(records) >= BATCH_SIZE
+                or (now - (buffer_started or now)) >= FLUSH_INTERVAL
+            )
+            if should_flush:
+                await flush()
 
         except (NatsTimeoutError, asyncio.TimeoutError):
-            continue
+            # No new messages arrived in time. If we have a partial buffer
+            # older than FLUSH_INTERVAL, flush it.
+            if buffer_started is not None:
+                age = asyncio.get_event_loop().time() - buffer_started
+                if age >= FLUSH_INTERVAL:
+                    await flush()
         except Exception as e:
             logger.error("Error fetching/processing messages: %s", e, exc_info=True)
             await asyncio.sleep(1)
@@ -190,4 +226,3 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Exiting pit-wall service.")
-

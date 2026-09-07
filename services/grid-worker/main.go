@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	defaultWorkerPool = 8
+	defaultWorkerPool = 64
 	fetchMaxWait      = 10 * time.Second
 	fetchHeartbeat    = 3 * time.Second // must be < fetchMaxWait/2
 )

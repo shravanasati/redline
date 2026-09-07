@@ -3,10 +3,16 @@ package main
 import (
 	"encoding/binary"
 	"hash/fnv"
+	"sync/atomic"
 	"time"
 
 	"github.com/RussellLuo/timingwheel"
 )
+
+// WheelDrops counts timer fires dropped because Out was full.
+// The wheel must never block its tick thread, so an overfull Out
+// sheds load here; main.go reports this counter.
+var WheelDrops atomic.Int64
 
 // MonitorWheel wraps RussellLuo/timingwheel to provide recurring, frequency-
 // based dispatch of monitors. Each monitor is scheduled as a self-rescheduling
@@ -87,6 +93,7 @@ func (mw *MonitorWheel) LoadWithJitter(m Monitor) {
 		select {
 		case mw.Out <- mLatest:
 		default:
+			WheelDrops.Add(1)
 		}
 		mw.schedule(uuidToString(m.ID), m.Version, d)
 	})
@@ -106,11 +113,13 @@ func (mw *MonitorWheel) schedule(monitorID string, scheduledVersion int, d time.
 			return
 		}
 
-		// Non-blocking send: drop this delivery if the consumer is behind,
-		// but always re-schedule so the monitor continues to fire.
+		// Non-blocking send: the wheel tick thread must never block, so
+		// drop this delivery if the consumer is behind (counted in
+		// WheelDrops), but always re-schedule so the monitor keeps firing.
 		select {
 		case mw.Out <- m:
 		default:
+			WheelDrops.Add(1)
 		}
 
 		freq := m.Frequency

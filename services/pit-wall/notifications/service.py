@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+from datetime import timezone
 import asyncpg
 
 from pb.tasks.results_pb2 import MonitorTaskResult  # type: ignore
@@ -81,7 +82,7 @@ async def handle_probe_failure(
             )
             return
 
-        time_val = result.timestamp.ToDatetime()
+        time_val = result.timestamp.ToDatetime(tzinfo=timezone.utc)
         latency_ms = result.latency.ToTimedelta().total_seconds() * 1000.0
         http_status = (
             result.http_status_code if result.http_status_code != 0 else None

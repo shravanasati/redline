@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -23,9 +24,22 @@ import (
 
 var dedupeInterval = time.Second * 20
 
+// maxInflightPublishes bounds concurrent NATS publishes so a slow
+// broker applies backpressure to the Out consumer (via pubSem) instead
+// of stalling the timing wheel. Must exceed peak fires/s * regions.
+const maxInflightPublishes = 4096
+
 var regionMap = safemap.New[string, struct{}]()
 var monitorMap = safemap.New[string, Monitor]()
 var tw *MonitorWheel
+
+var (
+	statFires         atomic.Int64
+	statPublished     atomic.Int64
+	statDuplicates    atomic.Int64
+	statPublishFailed atomic.Int64
+	statNoWorkers     atomic.Int64
+)
 
 func main() {
 	logger := logging.New(logging.Config{
@@ -72,23 +86,55 @@ func main() {
 	logger.Info("loaded active monitors", "count", monitorMap.Len())
 
 	// initialise the timing wheel with a generous output buffer
-	tw = NewMonitorWheel((monitorMap.Len()) * 4)
+	tw = NewMonitorWheel(max(monitorMap.Len()*8, 100000))
 	for _, m := range monitorMap.Values() {
 		tw.LoadWithJitter(m)
 	}
 	tw.Start()
-	defer tw.Stop()
 
-	// consume dispatched monitors
+	// Bound concurrent NATS publishes; the Out consumer blocks on pubSem
+	// (backpressure into Out) instead of blocking the wheel tick thread.
+	pubSem := make(chan struct{}, maxInflightPublishes)
+	var pubWg sync.WaitGroup
+	var dispWg sync.WaitGroup
+
+	// Periodic stats so wheel drops / publish failures are visible.
+	statsDone := make(chan struct{})
 	go func() {
+		t := time.NewTicker(15 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-statsDone:
+				return
+			case <-t.C:
+				logger.Info("dispatch stats",
+					"fires", statFires.Load(),
+					"published", statPublished.Load(),
+					"duplicates", statDuplicates.Load(),
+					"publishFailed", statPublishFailed.Load(),
+					"noWorkers", statNoWorkers.Load(),
+					"wheelDrops", WheelDrops.Load(),
+					"outLen", len(tw.Out),
+					"inflight", len(pubSem),
+				)
+			}
+		}
+	}()
+
+	// consume dispatched monitors without stalling on broker latency
+	dispWg.Add(1)
+	go func() {
+		defer dispWg.Done()
 		for m := range tw.Out {
+			statFires.Add(1)
 			builtTask, err := buildMonitorTask(m)
 			if err != nil {
 				logger.Error("failed to build task", "err", err)
 				continue
 			}
 
-			logger.Info("monitor fired", "id", builtTask.GetId(), "name", m.Name, "endpoint", m.Endpoint)
+			logger.Debug("monitor fired", "id", builtTask.GetId(), "name", m.Name, "endpoint", m.Endpoint)
 
 			data, err := proto.Marshal(builtTask)
 			if err != nil {
@@ -99,28 +145,41 @@ func main() {
 			jobSlot := time.Now().Unix() / int64(dedupeInterval.Seconds())
 			jobID := fmt.Sprintf("%s:%d", builtTask.GetId(), jobSlot)
 
-			subjectPrefix := "tasks."
 			activeRegions := regionMap.Keys()
 			if len(activeRegions) == 0 {
-				logger.Warn("no workers available to dispatch tasks to.")
+				n := statNoWorkers.Add(1)
+				// Throttle: warn once per ~100 fires without workers.
+				if (n-1)%100 == 0 {
+					logger.Warn("no workers available to dispatch tasks to.", "droppedFires", n)
+				}
+				continue
 			}
-			var wg sync.WaitGroup
 			for _, region := range activeRegions {
-				wg.Go(func() {
-					msg := natsgo.NewMsg(subjectPrefix + region)
+				pubSem <- struct{}{}
+				pubWg.Add(1)
+				go func(region string) {
+					defer pubWg.Done()
+					defer func() { <-pubSem }()
+					msg := natsgo.NewMsg("tasks." + region)
 					msg.Data = data
 					msg.Header.Set("Nats-TTL", fmt.Sprintf("%.0ds", int(float64(m.Frequency)*0.9)))
-					msg.Header.Set("Nats-Msg-Id", jobID)
+					msg.Header.Set("Nats-Msg-Id", jobID+":"+region)
 
 					publishCtx, publishCancel := context.WithTimeout(context.Background(), time.Second*5)
 					defer publishCancel()
-					_, err := natsConnector.PublishMsg(publishCtx, msg)
+					ack, err := natsConnector.PublishMsg(publishCtx, msg)
 					if err != nil {
+						statPublishFailed.Add(1)
 						logger.Error("async publish failed", "task_id", builtTask.GetId(), "region", region, "err", err)
+						return
 					}
-				})
+					if ack != nil && ack.Duplicate {
+						statDuplicates.Add(1)
+						return
+					}
+					statPublished.Add(1)
+				}(region)
 			}
-			wg.Wait()
 		}
 	}()
 
@@ -129,7 +188,18 @@ func main() {
 	defer stop()
 	go startMonitorResyncWorker(ctx, logger, conn)
 	<-ctx.Done()
-	logger.Info("shutting down", "signal", ctx.Err())
+	logger.Info("shutting down", "signal", ctx.Err(),
+		"fires", statFires.Load(),
+		"published", statPublished.Load(),
+		"duplicates", statDuplicates.Load(),
+		"publishFailed", statPublishFailed.Load(),
+		"noWorkers", statNoWorkers.Load(),
+		"wheelDrops", WheelDrops.Load(),
+	)
+	close(statsDone)
+	tw.Stop()
+	dispWg.Wait()
+	pubWg.Wait()
 }
 
 func ensurePGConn(url string) (*pgx.Conn, error) {

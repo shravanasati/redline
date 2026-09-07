@@ -71,12 +71,21 @@ tasks:
 
   grid-worker:
     dir: services/grid-worker
-    sources:
-      - "**/*.go"
-      - go.mod
-      - go.sum
+    # sources:
+    #   - "**/*.go"
+    #   - go.mod
+    #   - go.sum
     cmds:
       - go run .
+
+  workers:
+    dir: services/grid-worker
+    cmds:
+      - |
+        WORKER_REGION=eu-west task grid-worker &
+        WORKER_REGION=us-east task grid-worker &
+        WORKER_REGION=ap-southeast task grid-worker &
+        wait
 
   race-control:
     dir: services/race-control

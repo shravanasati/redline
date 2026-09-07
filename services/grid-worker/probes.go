@@ -40,6 +40,35 @@ func newSuccessResult(id string, latency time.Duration) *tasks.MonitorTaskResult
 	}.Build()
 }
 
+// sharedHTTPClient is reused across probes so TCP/TLS connections stay
+// warm via keep-alives. Per-probe deadlines come from request contexts,
+// not Client.Timeout, so a single client serves all timeout values.
+var sharedHTTPClient = &http.Client{
+	Transport: &http.Transport{
+		MaxIdleConns:        200,
+		MaxIdleConnsPerHost: 50,
+		IdleConnTimeout:     90 * time.Second,
+		DisableCompression:  false,
+	},
+}
+
+// newHTTPResult constructs a MonitorTaskResult for HTTP/HTTPS probes,
+// always setting Timestamp, Latency, WorkerRegion, and HttpStatusCode.
+func newHTTPResult(id string, success bool, statusCode int32, errMsg string, latency time.Duration) *tasks.MonitorTaskResult {
+	b := tasks.MonitorTaskResult_builder{
+		Id:             &id,
+		Success:        &success,
+		HttpStatusCode: statusCode,
+		Timestamp:      timestamppb.Now(),
+		Latency:        durationpb.New(latency),
+		WorkerRegion:   &cfg.Region,
+	}
+	if errMsg != "" {
+		b.ErrorMessage = &errMsg
+	}
+	return b.Build()
+}
+
 // checkAssertions evaluates each assertion against the probe result data.
 // statusCode is the HTTP status code (0 for non-HTTP probes).
 // body is the HTTP response body (empty for non-HTTP probes).
@@ -166,6 +195,9 @@ func probeHTTPOrHTTPS(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 		}
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	var reqBody *strings.Reader
 	if body != nil {
 		reqBody = body
@@ -174,9 +206,9 @@ func probeHTTPOrHTTPS(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 	var req *http.Request
 	var err error
 	if reqBody != nil {
-		req, err = http.NewRequest(method, endpoint, reqBody)
+		req, err = http.NewRequestWithContext(ctx, method, endpoint, reqBody)
 	} else {
-		req, err = http.NewRequest(method, endpoint, nil)
+		req, err = http.NewRequestWithContext(ctx, method, endpoint, nil)
 	}
 	if err != nil {
 		msg := fmt.Sprintf("failed to build request: %v", err)
@@ -189,9 +221,8 @@ func probeHTTPOrHTTPS(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 		}
 	}
 
-	client := &http.Client{Timeout: timeout}
 	start := time.Now()
-	resp, err := client.Do(req)
+	resp, err := sharedHTTPClient.Do(req)
 	latency := time.Since(start)
 
 	if err != nil {
@@ -228,19 +259,7 @@ func probeHTTPOrHTTPS(task *tasks.MonitorTask) *tasks.MonitorTaskResult {
 		}
 	}
 
-	result := tasks.MonitorTaskResult_builder{
-		Id:             &id,
-		Success:        &success,
-		HttpStatusCode: statusCode,
-		Timestamp:      timestamppb.Now(),
-		Latency:        durationpb.New(latency),
-	}
-
-	if errMsg != "" {
-		result.ErrorMessage = &errMsg
-	}
-
-	return result.Build()
+	return newHTTPResult(id, success, statusCode, errMsg, latency)
 }
 
 // probeICMP performs a TCP-based connectivity check as an ICMP substitute.
